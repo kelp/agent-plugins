@@ -157,6 +157,74 @@ Both review stages and both gates use a fix loop:
 3. Reviewer re-reviews, or the gate re-runs
 4. Maximum 3 rounds, then escalate to the user
 
+## Running the Pipeline as a Dynamic Workflow
+
+The stages above describe the **turn-by-turn** model: the
+orchestrator dispatches one agent per turn and every result
+lands in its context. Claude Code's dynamic workflows offer a
+second execution model -- the orchestration moves into a
+JavaScript script the runtime runs in the background, and only
+the final result returns to context. The agents and the
+discipline are identical; only the idiom changes.
+
+Reach for a workflow when the full pipeline runs at scale (a
+new module, or many modules/files in parallel). Keep the
+turn-by-turn skill for inline bug fixes and 1-2 file changes --
+a workflow's per-run agent fan-out is wasted on small
+interactive work, and costs meaningfully more tokens (a trivial
+3-behavior module ran ~6 agents / ~80k tokens end to end).
+
+### Idiom translation
+
+| Turn-by-turn (skill) | Workflow (script) |
+|----------------------|-------------------|
+| Dispatch `subagent_type: tdd-pipeline:implementer` | `agent(brief, {agentType: 'tdd-pipeline:implementer'})` |
+| Orchestrator runs the gate command itself | A gate is an `agent()` -- the script has no shell |
+| SendMessage to continue an agent | Re-`agent()`; resume/caching is runtime-provided |
+| Fix loop, max 3 rounds | A `do/while` capped on the reviewer verdict |
+| Reviewer returns prose findings | `agent(..., {schema})` returns a validated verdict |
+| Stage 7: orchestrator commits | Workflow returns the result; commit happens outside |
+
+### What stays the same
+
+- **Agents are unchanged.** The four plugin agents are the
+  workflow worker primitive; target them by qualified name via
+  `agentType`. They honor their role constraints when
+  workflow-driven exactly as under the skill.
+- **The discipline transfers through the brief**, not through
+  the skill prose. Inline the behaviors, the `path:line`
+  targets, the test command, and the default-value-trap warning
+  in each `agent()` call.
+- **RED gate semantics.** A stub that raises (rather than
+  returning a default) makes tests *error*, not *fail* --
+  unittest, pytest, and `zig build test` all report these
+  distinctly. Both count as valid RED: tests imported/compiled
+  cleanly and none passed. Have the gate agent report
+  passed/failed/errored counts so the script can assert
+  "none passed."
+
+### What changes
+
+- **No commit inside the workflow.** Return the diff and the
+  round-by-round review log; the orchestrator or human commits
+  afterward. This preserves one-commit-per-phase and sidesteps
+  signing-failure handling entirely.
+- **Sign-off moves to the run boundary.** Workflows take no
+  mid-run user input. For a human spot-check, run the phase as
+  its own workflow and review its return value before
+  committing.
+
+### Open question
+
+A workflow Claude *authors from scratch* only inherits this
+discipline if the skill's content reaches the author. Whether
+saying "workflow" in a TDD project auto-injects the
+tdd-orchestrate skill into the authoring step, or yields a
+generic TDD script that skips the RED gate, is unconfirmed.
+Until verified, read the generated script (`Ctrl+G` at the
+approval prompt) and confirm it targets the plugin agents and
+runs the gates before trusting it.
+
 ## Composition with Language Plugins
 
 This pipeline is language-agnostic. Language-specific
