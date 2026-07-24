@@ -29,12 +29,17 @@ All Codex traffic goes through:
 node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" <cmd> [flags]
 ```
 
-Commands: `start`, `send`, `list`, `end`. macOS and
-Linux only: the wrapper relies on POSIX process groups
-to terminate the codex tree and fails fast elsewhere.
-`start` and `send` read the prompt from stdin. Both print JSON with
-`threadId`, `lastMessage`, and `errors`. State lives in
-`~/.claude/codex-pair/pairs.json`.
+Commands: `start`, `send`, `list`, `end`,
+`design-register`, `design-agree`, `design-amend`,
+`review-start`, `review-complete`, `override-cap`,
+`snapshot`. macOS and Linux only: the wrapper relies on
+POSIX process groups to terminate the codex tree and
+fails fast elsewhere. `start` and `send` read the prompt
+from stdin; `send` requires
+`--kind design|review|freeform` (freeform is uncounted).
+Both print JSON with `threadId`, `lastMessage`, and
+`errors`. State lives in `~/.claude/codex-pair/pairs.json`
+(schema v2; v1 files migrate automatically).
 
 Always pass prompts via stdin from a temp file, never as
 a shell-interpolated argument and never as a heredoc:
@@ -45,7 +50,8 @@ the shell. Write the prompt with the Write tool, then:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" send \
-  --label <label> < "<prompt-file>"
+  --label <label> --kind <design|review|freeform> \
+  < "<prompt-file>"
 ```
 
 Quote every interpolated path. Labels are validated by
@@ -115,6 +121,11 @@ Ground rules:
 - Disagree when you disagree; do not defer to keep the
   peace. Flag anything that looks wrong, unclear, or
   untested.
+- Do not execute the project's test suite or long-running
+  commands; your sandbox cannot always reap spawned
+  processes and a wedged turn gets killed by the driver's
+  timeout. Read tests as specifications; running tests is
+  the driver's job, and the driver supplies the results.
 - Be concise. Findings and reasoning, not pleasantries.
 - End every review reply with exactly one of:
   VERDICT: APPROVED
@@ -145,53 +156,75 @@ review: both sides may propose, both must agree.
 
 1. Draft a short proposal: the goal, your approach, the
    alternatives you rejected and why, open questions.
-2. Send it, asking the partner to critique and
-   counter-propose, ending with exactly one of:
-   `POSITION: AGREE` or `POSITION: DISAGREE`, followed
-   by numbered points of contention or amendment.
+2. Send it with `--kind design`, asking the partner to
+   critique and counter-propose, ending with exactly one
+   of `POSITION: AGREE` or `POSITION: DISAGREE` plus
+   numbered points. The wrapper counts design rounds.
 3. For each point: incorporate it, or rebut it with
    reasons, and send the revised proposal. Concede when
    the partner's argument is better; hold when it is
    not. Do not converge by politeness.
-4. Consensus means the partner says AGREE and you agree
-   with the final text. Then present the agreed design
-   to the user in full before implementing. The thread
-   remembers it; later reviews are judged against it.
+4. On consensus (partner says AGREE and you agree):
+   write the agreed design to
+   `.codex-pair/design-<label>.md` in the repo, then run
+   `design-register --label <label> --path <that file>`
+   and `design-agree --label <label>`. Never `git add`
+   or commit it yourself; committing is the user's call.
+   Present the agreed design to the user in full before
+   implementing. Reviews are gated on this artifact: if
+   it drifts, the wrapper demands `design-amend`.
+5. To change an agreed design, run
+   `design-amend --label <label>` (this reopens debate,
+   resets round counters, and cancels any active review
+   cycle), iterate again, then re-register and re-agree.
 
-**Round cap: 5.** If positions still differ after 5
-rounds, present both positions and the crux of the
-disagreement to the user; they decide. Never paper over
-an unresolved disagreement as "consensus".
+**Round cap: 5, wrapper-enforced.** At the cap the
+wrapper returns `capState: decisionRequired` plus a
+disagreement-packet skeleton. Fill the packet with both
+positions and the evidence, present it to the user, and
+record their decision with
+`override-cap --label <label> --kind design` (decision
+text on stdin). Each override permits exactly one more
+round. Never paper over an unresolved disagreement as
+"consensus".
 
 ### review
 
-Send the current work for review:
+Reviews run in cycles gated on the agreed design:
 
-1. Collect the diff: `git diff HEAD` for uncommitted
-   work, or the range the user names. Untracked files do
-   not appear in `git diff`; append their contents (or
-   `git add -N` them first) so all-new-file changes are
-   not reported as empty. If there is truly nothing to
-   review, say so and stop.
-2. Send it with a one-line summary of intent:
+1. `review-start --label <label>` opens a cycle and
+   returns its `cycleId`. It requires an agreed design
+   and no active cycle. Drift is checked per review
+   send: a send fails if the artifact's hash changed,
+   the file moved, or the path escapes the repo; fix
+   with design-amend and re-agreement.
+2. `snapshot --label <label>` captures the complete
+   change deterministically: staged, unstaged, and
+   untracked files, binary markers, without touching the
+   index. It returns `{snapshotId, patch, omitted,
+   warning}`. If `omitted` is non-empty, tell the user
+   what was left out. If the patch is empty, say so and
+   stop.
+3. Send the patch with
+   `--kind review --cycle-id <id> --snapshot-id <sid>`
+   and a one-line summary of intent, ending with
+   "Remember the verdict format."
+4. Relay the reply. On `VERDICT: CHANGES_REQUESTED`,
+   address the numbered items (or rebut via another
+   review send), take a fresh snapshot, and re-send in
+   the same cycle.
+5. On `VERDICT: APPROVED`, run
+   `review-complete --label <label> --cycle-id <id>
+   --outcome approved`.
 
-```
-Review this change. Intent: <summary>.
-
-<diff>
-
-Remember the verdict format.
-```
-
-3. Relay the reply. If `VERDICT: CHANGES_REQUESTED`,
-   address the numbered items (or explain to the partner
-   why not, via `send`), then send the updated diff for
-   re-review.
-
-**Turn cap: 4 review rounds per change.** If there is no
-APPROVED verdict after 4 rounds, stop and present the
-remaining disagreement to the user; they break the tie.
-Do not loop silently.
+**Round cap: 4 per cycle, wrapper-enforced.** At the cap
+the wrapper demands a decision: fill the disagreement
+packet, present both positions to the user, then either
+record their go-ahead with
+`override-cap --kind review` (one more round per
+override) or close the cycle with
+`review-complete --outcome user-decided` and the
+decision text on stdin. Do not loop silently.
 
 ### resume [label]
 
@@ -202,8 +235,10 @@ If the label is missing, show what `list` returned.
 
 ### status
 
-Run `list`. Report labels, thread ids, turn counts, and
-last-used times in one short table.
+Run `list`. Report labels, thread ids, turn counts,
+last-used times, design status/revision, round counts,
+any `capState`, and any cap overrides in one short
+table.
 
 ### end [label]
 

@@ -101,7 +101,7 @@ after(() => rmSync(dir, { recursive: true, force: true }));
 
 function sendOnce() {
   return new Promise((resolve) => {
-    const child = spawn("node", [cli, "send", "--label", "a"], { env });
+    const child = spawn("node", [cli, "send", "--label", "a", "--kind", "freeform"], { env });
     let stderr = "";
     child.stderr.on("data", (c) => (stderr += c));
     child.stdin.end("hello");

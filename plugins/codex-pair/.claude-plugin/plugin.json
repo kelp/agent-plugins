@@ -1,7 +1,7 @@
 {
   "name": "codex-pair",
   "description": "Pair programming with a persistent Codex partner. Claude drives and edits files while Codex navigates and reviews in a read-only sandbox, all through one long-lived thread that survives restarts. The GPT side is set by your codex install; override per pair with the wrapper's --model flag.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Travis Cole"
   },

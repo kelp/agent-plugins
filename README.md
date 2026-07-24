@@ -167,6 +167,14 @@ This complements cross-review: cross-review is a one-shot
 second opinion, codex-pair is a continuous partner that
 remembers the whole conversation.
 
+Since v0.3.0 the workflow is first-class: an agreed design
+artifact lives in the repo (`.codex-pair/design-<label>.md`)
+and reviews are gated on it; design and review round caps
+are enforced mechanically, with user overrides recorded in
+state; and a deterministic snapshot command captures
+staged, unstaged, and untracked changes without touching
+the index.
+
 ```bash
 /plugin install codex-pair@kelp-claude-plugins
 ```
@@ -174,13 +182,18 @@ remembers the whole conversation.
 **Commands:**
 - `/pair start [label]` -- pin a new long-lived Codex thread
 - `/pair design <topic>` -- iterate on a design with the
-  partner until both sides agree
+  partner until both sides agree; the result is written to
+  `.codex-pair/` and hash-pinned
 - `/pair <message>` -- send a message to the pinned thread
 - `/pair review` -- ask Codex to review in a read-only sandbox
 - `/pair resume [label]` -- reattach to a pinned thread after
   a restart
 - `/pair status` -- show the active thread and its state
 - `/pair end [label]` -- close out a pinned thread
+
+The skill drives these through internal wrapper subcommands
+(design-register, design-agree, design-amend, review-start,
+review-complete, override-cap, snapshot).
 
 **Requirements:**
 - [Codex CLI](https://github.com/openai/codex) >= 0.145,

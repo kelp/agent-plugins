@@ -63,7 +63,7 @@ test("external SIGTERM rejects even if child exits 0", async () => {
 
   const result = await new Promise((resolve) => {
     const child = spawn(
-      "node", [cli, "send", "--label", "a", "--timeout-sec", "60"],
+      "node", [cli, "send", "--label", "a", "--kind", "freeform", "--timeout-sec", "60"],
       { env }
     );
     let stderr = "";
@@ -87,7 +87,7 @@ test("timeout kills the whole process tree, then releases", async () => {
   chmodSync(fake, 0o755);
   const result = await new Promise((resolve) => {
     const child = spawn(
-      "node", [cli, "send", "--label", "a", "--timeout-sec", "1"],
+      "node", [cli, "send", "--label", "a", "--kind", "freeform", "--timeout-sec", "1"],
       { env }
     );
     let stderr = "";

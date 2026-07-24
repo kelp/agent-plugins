@@ -14,16 +14,23 @@
 //   end   [--label L]           forget the pair (thread remains
 //                               on disk; `codex resume <id>` works)
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync, execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
+  closeSync,
   mkdirSync,
+  mkdtempSync,
+  openSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmdirSync,
+  rmSync,
   statSync,
+  unlinkSync,
   writeFileSync
 } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import {
   parseCliArgs,
@@ -37,7 +44,19 @@ import {
   isInFlight,
   buildStartArgs,
   buildSendArgs,
-  renderEventLine
+  renderEventLine,
+  migrateState,
+  registerDesign,
+  agreeDesign,
+  amendDesign,
+  startReviewCycle,
+  completeReviewCycle,
+  recordCountedSend,
+  overrideCap,
+  checkReviewSendPreconditions,
+  assembleSnapshot,
+  snapshotIdFor,
+  gitCQuote
 } from "./lib.mjs";
 
 const STATE_FILE =
@@ -52,7 +71,7 @@ function loadState() {
   try {
     text = readFileSync(STATE_FILE, "utf8");
   } catch (err) {
-    if (err.code === "ENOENT") return { pairs: [] };
+    if (err.code === "ENOENT") return migrateState({ pairs: [] });
     throw new Error(`cannot read ${STATE_FILE}: ${err.message}`);
   }
   let state;
@@ -66,6 +85,11 @@ function loadState() {
   }
   if (!state || !Array.isArray(state.pairs)) {
     throw new Error(`${STATE_FILE} has invalid shape: pairs must be an array`);
+  }
+  try {
+    state = migrateState(state);
+  } catch (err) {
+    throw new Error(`${STATE_FILE}: ${err.message}`);
   }
   for (const p of state.pairs) {
     if (
@@ -261,6 +285,195 @@ function output(value) {
   process.stdout.write(JSON.stringify(value, null, 2) + "\n");
 }
 
+// Snapshot: deterministic worktree-vs-HEAD capture per the v0.3
+// design (design-0.3.0.md section 4). Pinned git flags, C locale,
+// per-path assembly; the index is never modified.
+const SNAPSHOT_CAP_BYTES = 300 * 1024;
+const GIT_CONFIG = [
+  "-c", "core.quotePath=false", "-c", "diff.renames=false"
+];
+const DIFF_FLAGS = ["--no-ext-diff", "--no-color", "--no-textconv"];
+
+function takeSnapshot(pair) {
+  const gitEnv = { ...process.env, LC_ALL: "C", LANG: "C" };
+  const git = (args, okCodes = [0]) => {
+    try {
+      return execFileSync("git", [...GIT_CONFIG, ...args], {
+        cwd: pair.cwd,
+        env: gitEnv,
+        maxBuffer: 64 * 1024 * 1024
+      });
+    } catch (err) {
+      if (typeof err.status === "number" && okCodes.includes(err.status)) {
+        return err.stdout ?? Buffer.alloc(0);
+      }
+      throw new Error(`git ${args[0]} failed: ${err.message}`);
+    }
+  };
+  // NUL-delimited discovery over raw buffers: newlines and control
+  // bytes are legal in filenames and must not break splitting.
+  const nulSplitRaw = (buf) => {
+    const out = [];
+    let start = 0;
+    for (let i = 0; i < buf.length; i++) {
+      if (buf[i] === 0) {
+        if (i > start) out.push(buf.subarray(start, i));
+        start = i + 1;
+      }
+    }
+    if (start < buf.length) out.push(buf.subarray(start));
+    return out;
+  };
+
+  const tracked = nulSplitRaw(
+    git(["diff", ...DIFF_FLAGS, "--name-only", "-z", "HEAD"])
+  );
+  const untracked = nulSplitRaw(
+    git(["ls-files", "--others", "--exclude-standard", "-z"])
+  );
+
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  const sizeOf = (raw) => {
+    try {
+      return statSync(
+        Buffer.concat([Buffer.from(pair.cwd), Buffer.from("/"), raw])
+      ).size;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Byte-faithful diffing without Node argv: xargs -0 receives the
+  // raw NUL-terminated pathname on stdin and builds git's argv from
+  // the original bytes. Any diff larger than the patch cap can
+  // never be included, so a maxBuffer overflow on the spool IS the
+  // "omit for size" signal; the file itself is never the failure
+  // point. git exit 1 surfaces as xargs exit 123 (used by
+  // --no-index for "files differ").
+  // A true spool: stdout goes to a temp file, its exact size is
+  // measured, and the body is read back only when it fits the
+  // patch cap. The omitted-entry byte count is therefore the real
+  // diff size, deletions included, with no buffer bound in play.
+  // Scoped to this snapshot; removed in the finally below so error
+  // paths cannot retain large spool files.
+  const spoolTmpDir = mkdtempSync(path.join(tmpdir(), "codex-pair-snap-"));
+  let spoolSeq = 0;
+  const spoolDiff = (gitArgs, raw, okCodes) => {
+    const tmp = path.join(spoolTmpDir, `spool-${spoolSeq++}`);
+    const fd = openSync(tmp, "w");
+    let result;
+    try {
+      result = spawnSync(
+        "xargs",
+        ["-0", "-n", "1", "git", ...GIT_CONFIG, ...gitArgs],
+        {
+          cwd: pair.cwd,
+          env: gitEnv,
+          input: Buffer.concat([raw, Buffer.from([0])]),
+          stdio: ["pipe", fd, "inherit"]
+        }
+      );
+    } finally {
+      closeSync(fd);
+    }
+    if (result.error) {
+      throw new Error(`git diff spool failed: ${result.error.message}`);
+    }
+    if (result.status !== 0 && !okCodes.includes(result.status)) {
+      throw new Error(`git diff spool exited with ${result.status}`);
+    }
+    const size = statSync(tmp).size;
+    if (size > SNAPSHOT_CAP_BYTES) {
+      unlinkSync(tmp);
+      return { overflow: true, bytes: size };
+    }
+    const buf = readFileSync(tmp);
+    unlinkSync(tmp);
+    return { overflow: false, buf };
+  };
+
+  // Reconstruct header lines from the known raw pathname rather
+  // than substring-matching git's partially escaped output: under
+  // quotePath=false git still escapes quote and backslash, so a
+  // name mixing non-ASCII bytes with those characters never
+  // matches its unescaped form. Only the pre-hunk region is
+  // touched; body lines may legitimately start with ---/+++.
+  const normalizeHeaders = (text, raw) => {
+    const qa = gitCQuote(Buffer.concat([Buffer.from("a/"), raw]));
+    const qb = gitCQuote(Buffer.concat([Buffer.from("b/"), raw]));
+    if (!qa.startsWith('"') && !qb.startsWith('"')) return text;
+    const lines = text.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith("@@")) break;
+      if (line.startsWith("diff --git ")) {
+        lines[i] = `diff --git ${qa} ${qb}`;
+      } else if (line.startsWith("--- ") && line !== "--- /dev/null") {
+        lines[i] = `--- ${qa}`;
+      } else if (line.startsWith("+++ ") && line !== "+++ /dev/null") {
+        lines[i] = `+++ ${qb}`;
+      }
+    }
+    return lines.join("\n");
+  };
+
+  const toPiece = (raw, spooled) => {
+    const display = gitCQuote(raw);
+    const sortKey = raw.toString("latin1");
+    if (spooled.overflow) {
+      return {
+        path: display, sortKey, text: "",
+        bytes: spooled.bytes,
+        binary: false, forceOmit: true, reason: "size"
+      };
+    }
+    const buf = spooled.buf;
+    let text = null;
+    try {
+      text = decoder.decode(buf);
+    } catch {
+      // invalid UTF-8 diff body: classify binary below
+    }
+    const gitSaysBinary = text !== null && /^Binary files /m.test(text);
+    if (text === null || gitSaysBinary) {
+      return {
+        path: display, sortKey, text: null,
+        bytes: sizeOf(raw), binary: true
+      };
+    }
+    text = normalizeHeaders(text, raw);
+    return {
+      path: display, sortKey, text,
+      bytes: Buffer.byteLength(text, "utf8"), binary: false
+    };
+  };
+
+  const pieces = [];
+  try {
+    for (const raw of tracked) {
+      pieces.push(toPiece(raw,
+        spoolDiff(["diff", ...DIFF_FLAGS, "HEAD", "--"], raw, [0])));
+    }
+    // git --no-index exits 1 when the files differ (the normal case
+    // here); GNU xargs reports that as 123, BSD xargs as 1.
+    for (const raw of untracked) {
+      pieces.push(toPiece(raw,
+        spoolDiff(["diff", ...DIFF_FLAGS, "--no-index", "--", "/dev/null"],
+          raw, [0, 1, 123])));
+    }
+  } finally {
+    rmSync(spoolTmpDir, { recursive: true, force: true });
+  }
+
+  const assembled = assembleSnapshot(pieces, {
+    capBytes: SNAPSHOT_CAP_BYTES
+  });
+  return {
+    snapshotId: snapshotIdFor(assembled.patch, assembled.omitted),
+    ...assembled
+  };
+}
+
 async function main() {
   // Tree termination uses POSIX process groups (kill(-pid));
   // Windows would catch neither signal and leak the native
@@ -292,6 +505,180 @@ async function main() {
       return removePair(s, opts.label);
     });
     output({ removed: removed ?? opts.label });
+    return;
+  }
+
+  const requirePair = (s, label) => {
+    const pair = getPair(s, label);
+    if (!pair) {
+      const labels = s.pairs.map((p) => p.label).join(", ") || "none";
+      throw new Error(`no pair named '${label}' (have: ${labels})`);
+    }
+    return pair;
+  };
+  // Lifecycle and cap commands must not race an active send: a
+  // cleared cycle or cap mid-turn would fail the successful turn's
+  // bookkeeping.
+  const requireIdlePair = (s, label) => {
+    const pair = requirePair(s, label);
+    if (isInFlight(pair, Date.now())) {
+      throw new Error(
+        `an operation is in flight for '${label}'; wait for it before ` +
+          "changing lifecycle or cap state"
+      );
+    }
+    return pair;
+  };
+  const sha256File = (p) =>
+    createHash("sha256").update(readFileSync(p)).digest("hex");
+  // Re-resolve and re-contain the design path on every use: a file
+  // or directory symlink swapped in after registration must not
+  // lead reads outside the repository.
+  const designFileInfo = (pair) => {
+    const info = { exists: false, sha: null };
+    let abs;
+    try {
+      const cwdReal = realpathSync(pair.cwd);
+      abs = realpathSync(path.resolve(pair.cwd, pair.design.path));
+      if (abs !== cwdReal && !abs.startsWith(cwdReal + path.sep)) {
+        throw new Error(
+          `design path resolves outside the repo: ${pair.design.path}; ` +
+            "run design-amend"
+        );
+      }
+    } catch (err) {
+      if (err.message.includes("outside the repo")) throw err;
+      return info;
+    }
+    info.exists = true;
+    info.sha = sha256File(abs);
+    return info;
+  };
+
+  if (opts.command === "design-register") {
+    if (!opts.path) throw new Error("design-register requires --path");
+    const expected = `.codex-pair/design-${opts.label}.md`;
+    if (opts.path !== expected) {
+      throw new Error(
+        `design artifact must live at ${expected} (got ${opts.path})`
+      );
+    }
+    let record;
+    await mutateState((s) => {
+      const pair = requireIdlePair(s, opts.label);
+      const cwdReal = realpathSync(pair.cwd);
+      let abs;
+      try {
+        abs = realpathSync(path.resolve(pair.cwd, opts.path));
+      } catch {
+        throw new Error(`design file not found: ${opts.path}`);
+      }
+      if (abs !== cwdReal && !abs.startsWith(cwdReal + path.sep)) {
+        throw new Error(
+          `design path must resolve inside the repo, got: ${opts.path}`
+        );
+      }
+      const next = registerDesign(s, opts.label, {
+        path: path.relative(cwdReal, abs),
+        sha256: sha256File(abs)
+      });
+      record = getPair(next, opts.label).design;
+      return next;
+    });
+    output({ label: opts.label, design: record });
+    return;
+  }
+
+  if (opts.command === "design-agree") {
+    let record;
+    await mutateState((s) => {
+      const pair = requireIdlePair(s, opts.label);
+      if (!pair.design) {
+        throw new Error("no design registered; run design-register first");
+      }
+      const info = designFileInfo(pair);
+      if (!info.exists) {
+        throw new Error(
+          `design file missing at ${pair.design.path}; re-register it`
+        );
+      }
+      const next = agreeDesign(s, opts.label, info.sha);
+      record = getPair(next, opts.label).design;
+      return next;
+    });
+    output({ label: opts.label, design: record });
+    return;
+  }
+
+  if (opts.command === "design-amend") {
+    let record;
+    await mutateState((s) => {
+      requireIdlePair(s, opts.label);
+      const next = amendDesign(s, opts.label);
+      record = getPair(next, opts.label).design;
+      return next;
+    });
+    output({ label: opts.label, design: record });
+    return;
+  }
+
+  if (opts.command === "review-start") {
+    let cycleId;
+    await mutateState((s) => {
+      requireIdlePair(s, opts.label);
+      const r = startReviewCycle(s, opts.label);
+      cycleId = r.cycleId;
+      return r.state;
+    });
+    output({ label: opts.label, cycleId });
+    return;
+  }
+
+  if (opts.command === "review-complete") {
+    if (!opts.cycleId || !opts.outcome) {
+      throw new Error("review-complete requires --cycle-id and --outcome");
+    }
+    let decision = null;
+    if (opts.outcome === "user-decided") {
+      decision = (await readStdin()).trim();
+      if (!decision) {
+        throw new Error(
+          "review-complete --outcome user-decided requires the user's " +
+            "decision text on stdin"
+        );
+      }
+    }
+    await mutateState((s) => {
+      requireIdlePair(s, opts.label);
+      return completeReviewCycle(
+        s, opts.label, opts.cycleId, opts.outcome, decision,
+        new Date().toISOString()
+      );
+    });
+    output({ label: opts.label, cycleId: opts.cycleId, outcome: opts.outcome });
+    return;
+  }
+
+  if (opts.command === "override-cap") {
+    const decision = (await readStdin()).trim();
+    if (!decision) {
+      throw new Error(
+        "override-cap requires the user's decision text on stdin"
+      );
+    }
+    await mutateState((s) => {
+      requireIdlePair(s, opts.label);
+      return overrideCap(
+        s, opts.label, opts.kind, decision, new Date().toISOString()
+      );
+    });
+    output({ label: opts.label, kind: opts.kind, recorded: true });
+    return;
+  }
+
+  if (opts.command === "snapshot") {
+    const pair = requirePair(state, opts.label);
+    output(takeSnapshot(pair));
     return;
   }
 
@@ -334,7 +721,10 @@ async function main() {
         sandbox: opts.sandbox,
         createdAt: now,
         lastUsedAt: now,
-        turns: 1
+        turns: 1,
+        designRounds: 0,
+        capState: {},
+        capOverrides: []
       });
     });
     output({
@@ -361,10 +751,33 @@ async function main() {
       Date.now()
     );
     pair = getPair(claimed, opts.label);
+    if (opts.kind === "review") {
+      if (!opts.cycleId || !opts.snapshotId) {
+        throw new Error("review sends require --cycle-id and --snapshot-id");
+      }
+      let currentSha = null;
+      let pathExists = false;
+      if (pair.design) {
+        const info = designFileInfo(pair);
+        pathExists = info.exists;
+        currentSha = info.sha;
+      }
+      checkReviewSendPreconditions(pair, { currentSha, pathExists });
+    }
+    if (opts.kind !== "freeform") {
+      // Dry validation before spending a codex call: throws on a
+      // capped kind without a permit or a stale cycle id. The real
+      // count happens after the turn succeeds.
+      recordCountedSend(claimed, opts.label, opts.kind, {
+        cycleId: opts.cycleId,
+        snapshotId: opts.snapshotId
+      });
+    }
     return claimed;
   });
 
   let events;
+  let packet;
   try {
     const stdout = await runCodex(buildSendArgs(pair.threadId, opts), {
       cwd: pair.cwd,
@@ -372,9 +785,20 @@ async function main() {
       timeoutSec: opts.timeoutSec
     });
     events = parseEvents(stdout);
-    await mutateState((s) =>
-      applySendUpdate(s, pair.label, pair.threadId, new Date().toISOString())
-    );
+    await mutateState((s) => {
+      let next = applySendUpdate(
+        s, pair.label, pair.threadId, new Date().toISOString()
+      );
+      if (opts.kind !== "freeform") {
+        const counted = recordCountedSend(next, pair.label, opts.kind, {
+          cycleId: opts.cycleId,
+          snapshotId: opts.snapshotId
+        });
+        next = counted.state;
+        packet = counted.disagreementPacket;
+      }
+      return next;
+    });
   } finally {
     await mutateState((s) =>
       releaseInFlight(s, opts.label, process.pid)
@@ -383,8 +807,10 @@ async function main() {
   output({
     label: pair.label,
     threadId: pair.threadId,
+    kind: opts.kind,
     lastMessage: events.lastMessage,
-    errors: events.errors
+    errors: events.errors,
+    ...(packet ? { disagreementPacket: packet } : {})
   });
 }
 

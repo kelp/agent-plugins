@@ -70,7 +70,7 @@ test("start refuses a duplicate label", () => {
 });
 
 test("send resumes the stored thread without -s", () => {
-  const out = JSON.parse(run(["send", "--label", "t"], "review this diff"));
+  const out = JSON.parse(run(["send", "--label", "t", "--kind", "freeform"], "review this diff"));
   assert.equal(out.threadId, "fake-thread-1");
   assert.equal(out.lastMessage, "hello from codex");
 
@@ -84,7 +84,7 @@ test("send resumes the stored thread without -s", () => {
 });
 
 test("send with unknown label fails with available labels", () => {
-  assert.throws(() => run(["send", "--label", "nope"], "x"), /\bt\b/);
+  assert.throws(() => run(["send", "--label", "nope", "--kind", "freeform"], "x"), /\bt\b/);
 });
 
 test("list prints state", () => {
