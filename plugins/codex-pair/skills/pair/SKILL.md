@@ -8,10 +8,11 @@ description: >
   when the user wants to pair with Codex, get iterative
   review from Codex, iterate on a design to consensus,
   or says "/pair", "pair with codex", "ask my pair
-  partner". Subcommands: start, design, review, resume,
-  status, end, or a freeform message.
+  partner". Subcommands: start, design, review, judge,
+  resume, status, end, or a freeform message. A Fable
+  judge breaks deadlocks.
 user-invocable: true
-argument-hint: "start [label] | design <topic> | <message> | review | resume [label] | status | end [label]"
+argument-hint: "start [label] | design <topic> | <message> | review | judge | resume [label] | status | end [label]"
 ---
 
 # /pair
@@ -32,7 +33,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" <cmd> [flags]
 Commands: `start`, `send`, `list`, `end`,
 `design-register`, `design-agree`, `design-amend`,
 `review-start`, `review-complete`, `override-cap`,
-`snapshot`. macOS and Linux only: the wrapper relies on
+`judge`, `snapshot`. macOS and Linux only: the wrapper relies on
 POSIX process groups to terminate the codex tree and
 fails fast elsewhere. `start` and `send` read the prompt
 from stdin; `send` requires
@@ -181,8 +182,9 @@ review: both sides may propose, both must agree.
 **Round cap: 5, wrapper-enforced.** At the cap the
 wrapper returns `capState: decisionRequired` plus a
 disagreement-packet skeleton. Fill the packet with both
-positions and the evidence, present it to the user, and
-record their decision with
+positions and the evidence, run the judge on it (see
+**judge** below), then present packet and ruling together
+and record the user's decision with
 `override-cap --label <label> --kind design` (decision
 text on stdin). Each override permits exactly one more
 round. Never paper over an unresolved disagreement as
@@ -219,12 +221,82 @@ Reviews run in cycles gated on the agreed design:
 
 **Round cap: 4 per cycle, wrapper-enforced.** At the cap
 the wrapper demands a decision: fill the disagreement
-packet, present both positions to the user, then either
+packet, run the judge on it (see **judge** below), present
+both positions plus the ruling to the user, then either
 record their go-ahead with
 `override-cap --kind review` (one more round per
 override) or close the cycle with
 `review-complete --outcome user-decided` and the
 decision text on stdin. Do not loop silently.
+
+### judge
+
+A third model, Fable, rules on a deadlock between you and
+the partner. It is advisory: it decides nothing about the
+session. Only the user's `override-cap` grants another
+round, and only `review-complete` closes a cycle.
+
+Run the judge when:
+
+- a cap is reached (`capState: decisionRequired`) —
+  always, before presenting the packet to the user;
+- the user asks (`/pair judge`) at any point in a cycle;
+- two consecutive rounds restate the same disagreement
+  with no new evidence, even below the cap.
+
+Steps:
+
+1. Build the packet: your position, the partner's
+   position verbatim (do not paraphrase its argument into
+   your framing), the contested points as a numbered
+   list, and the evidence each side cited.
+2. Dispatch one subagent with the Agent tool,
+   `model: "fable"`, `subagent_type: "general-purpose"`.
+   Give it the packet, the current snapshot patch (or the
+   design artifact for a design deadlock), the repo path,
+   and this instruction set:
+
+```
+You are the judge in a pair-programming disagreement.
+Claude drives, Codex navigates; they have not converged.
+You have no stake in either position.
+
+Rule on the contested points below. Read the actual code
+before ruling on any claim about it; a position that
+cites no evidence loses to one that does. Do not modify
+any file. Do not propose a third design unless both
+positions are wrong, and say so plainly if they are.
+
+Reply in exactly this shape:
+VERDICT: CLAUDE | CODEX | SPLIT | UNRESOLVED
+Then one numbered entry per contested point: who is
+right, and the file:line evidence that settles it.
+Then one line: RECOMMENDATION: <what to do next>.
+UNRESOLVED means the evidence does not settle it; say
+what evidence would.
+```
+
+3. Record the ruling (this is an audit entry, not a
+   permit). Write the ruling to a temp file, then:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" judge \
+  --label <label> --kind <design|review> \
+  --verdict <claude|codex|split|unresolved> \
+  < "<ruling-file>"
+```
+
+4. Relay the verdict and the recommendation to the user
+   alongside the disagreement packet. If the judge ruled
+   against you, say so and concede the point in the next
+   round; do not re-argue a lost point at the partner.
+   If it ruled against the partner, send the ruling's
+   evidence via `send` rather than the verdict alone.
+
+The judge is a peer too. Verify its evidence like any
+other finding; a ruling that cites nothing is worth
+nothing. Never fabricate a ruling, and never run the
+judge to break a tie you have not actually reached.
 
 ### resume [label]
 
@@ -237,8 +309,8 @@ If the label is missing, show what `list` returned.
 
 Run `list`. Report labels, thread ids, turn counts,
 last-used times, design status/revision, round counts,
-any `capState`, and any cap overrides in one short
-table.
+any `capState`, any cap overrides, and any judge rulings
+(verdict and round) in one short table.
 
 ### end [label]
 

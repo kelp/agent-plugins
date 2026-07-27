@@ -21,7 +21,8 @@ A Claude Code plugin marketplace containing these plugins:
   cross-validation using Claude and GPT-5.5
 - **codex-pair** -- pair programming with a persistent
   Codex partner over one long-lived thread (model set
-  by the user's Codex install)
+  by the user's Codex install), with a Fable judge for
+  deadlocks
 - **knowledge-forge** -- cross-session routing and
   capture for a three-layer personal knowledge base
 - **fleet-efficiency** -- context-handoff, prompt-cache,

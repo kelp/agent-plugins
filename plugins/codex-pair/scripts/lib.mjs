@@ -6,11 +6,13 @@ import { createHash } from "node:crypto";
 const COMMANDS = new Set([
   "start", "send", "list", "end",
   "design-register", "design-agree", "design-amend",
-  "review-start", "review-complete", "override-cap", "snapshot"
+  "review-start", "review-complete", "override-cap", "snapshot",
+  "judge"
 ]);
 
 const KINDS = new Set(["design", "review", "freeform"]);
 const OUTCOMES = new Set(["approved", "user-decided"]);
+export const VERDICTS = new Set(["claude", "codex", "split", "unresolved"]);
 
 // codex 0.145 rejects danger-full-access only behind an extra flag;
 // a pair partner never needs it, so we refuse it outright.
@@ -38,11 +40,13 @@ export function parseCliArgs(argv) {
     cycleId: null,
     snapshotId: null,
     path: null,
-    outcome: null
+    outcome: null,
+    verdict: null
   };
   const known = new Set([
     "--label", "--cwd", "--model", "--sandbox", "--timeout-sec",
-    "--kind", "--cycle-id", "--snapshot-id", "--path", "--outcome"
+    "--kind", "--cycle-id", "--snapshot-id", "--path", "--outcome",
+    "--verdict"
   ]);
   for (let i = 0; i < rest.length; i += 2) {
     const flag = rest[i];
@@ -108,6 +112,14 @@ export function parseCliArgs(argv) {
         }
         opts.outcome = value;
         break;
+      case "--verdict":
+        if (!VERDICTS.has(value)) {
+          throw new Error(
+            `--verdict must be one of: ${[...VERDICTS].join(", ")}`
+          );
+        }
+        opts.verdict = value;
+        break;
     }
   }
   if (command === "send" && !opts.kind) {
@@ -115,6 +127,14 @@ export function parseCliArgs(argv) {
   }
   if (command === "override-cap" && !opts.kind) {
     throw new Error("override-cap requires --kind design|review");
+  }
+  if (command === "judge") {
+    if (!opts.kind) throw new Error("judge requires --kind design|review");
+    if (!opts.verdict) {
+      throw new Error(
+        `judge requires --verdict ${[...VERDICTS].join("|")}`
+      );
+    }
   }
   return opts;
 }
@@ -319,6 +339,7 @@ export function migrateState(raw) {
     designRounds: 0,
     capState: {},
     capOverrides: [],
+    judgeRulings: [],
     ...p
   }));
   return { ...raw, schemaVersion: 2, pairs };
@@ -536,6 +557,40 @@ export function overrideCap(state, label, kind, decision, at) {
   const capPermits = { ...pair.capPermits };
   capPermits[kind] = (capPermits[kind] ?? 0) + 1;
   return upsertPair(state, { ...pair, capOverrides, capPermits });
+}
+
+// judge: append a third-model ruling to the pair's audit log. Purely
+// advisory — it never touches capState or capPermits, so only the
+// user's override-cap grants another round. The log survives
+// design-amend and cycle completion; it is the record of who was
+// judged right, not a lever on the state machine.
+export function recordJudgeRuling(state, label, kind, { verdict, ruling }, at) {
+  const pair = requirePair(state, label);
+  if (kind !== "design" && kind !== "review") {
+    throw new Error(`judge kind must be design or review, got ${kind}`);
+  }
+  if (!VERDICTS.has(verdict)) {
+    throw new Error(
+      `judge verdict must be one of: ${[...VERDICTS].join(", ")}`
+    );
+  }
+  const text = String(ruling ?? "").trim();
+  if (!text) throw new Error("judge requires the ruling text");
+  const record = {
+    at,
+    kind,
+    rounds: kind === "design"
+      ? (pair.designRounds ?? 0)
+      : (pair.review?.reviewRounds ?? 0),
+    verdict,
+    ruling: text
+  };
+  if (kind === "review") {
+    const active = pair.review?.activeCycleId;
+    if (active !== undefined && active !== null) record.cycleId = active;
+  }
+  const judgeRulings = [...(pair.judgeRulings ?? []), record];
+  return upsertPair(state, { ...pair, judgeRulings });
 }
 
 // Gate on review-kind sends: agreed design, stored hash matching the

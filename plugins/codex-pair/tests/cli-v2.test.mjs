@@ -268,3 +268,37 @@ test("mixed non-ASCII plus escaped characters canonicalize fully", () => {
   );
   rmSync(path.join(repo, name));
 });
+
+test("judge records an advisory ruling without granting a round", () => {
+  run(["start", "--label", "j", "--cwd", repo], "hello");
+  for (let i = 0; i < 5; i++) {
+    run(["send", "--label", "j", "--kind", "design"], `round ${i}`);
+  }
+  const out = JSON.parse(
+    run(["judge", "--label", "j", "--kind", "design", "--verdict", "codex"],
+      "codex is right: the retry loop is unbounded")
+  );
+  assert.equal(out.verdict, "codex");
+  assert.equal(out.rounds, 5);
+  const state = JSON.parse(run(["list"]));
+  const pair = state.pairs.find((p) => p.label === "j");
+  assert.equal(pair.judgeRulings.length, 1);
+  assert.match(pair.judgeRulings[0].ruling, /retry loop/);
+  assert.throws(
+    () => run(["send", "--label", "j", "--kind", "design"], "more"),
+    /override-cap/,
+    "the judge is advisory; only the user's override grants a round"
+  );
+});
+
+test("judge requires a verdict and ruling text on stdin", () => {
+  assert.throws(
+    () => run(["judge", "--label", "j", "--kind", "design"], "text"),
+    /verdict/i
+  );
+  assert.throws(
+    () => run(["judge", "--label", "j", "--kind", "design",
+      "--verdict", "claude"], "   "),
+    /ruling/i
+  );
+});

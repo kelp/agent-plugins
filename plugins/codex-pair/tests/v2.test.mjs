@@ -9,6 +9,7 @@ import {
   completeReviewCycle,
   recordCountedSend,
   overrideCap,
+  recordJudgeRuling,
   checkReviewSendPreconditions,
   assembleSnapshot,
   snapshotIdFor,
@@ -385,4 +386,70 @@ test("upsertPair round-trips v2 fields", () => {
   const p = getPair(s, "a");
   s = upsertPair(s, { ...p, turns: 9 });
   assert.equal(getPair(s, "a").design.sha256, "h1");
+});
+
+// --- judge rulings (advisory third opinion) ---
+
+test("recordJudgeRuling appends an audit entry with rounds and verdict", () => {
+  let s = base();
+  assert.deepEqual(getPair(s, "a").judgeRulings, [],
+    "migration defaults the ruling log to empty");
+  for (let i = 0; i < 2; i++) {
+    s = recordCountedSend(s, "a", "design", {}).state;
+  }
+  s = recordJudgeRuling(s, "a", "design",
+    { verdict: "codex", ruling: "codex is right about the retry window" },
+    AT);
+  const rulings = getPair(s, "a").judgeRulings;
+  assert.equal(rulings.length, 1);
+  assert.deepEqual(rulings[0], {
+    at: AT, kind: "design", rounds: 2, verdict: "codex",
+    ruling: "codex is right about the retry window"
+  });
+});
+
+test("recordJudgeRuling stamps the active cycle for review kind", () => {
+  let s = registerDesign(base(), "a", { path: "d.md", sha256: "h1" });
+  s = agreeDesign(s, "a", "h1");
+  const c = startReviewCycle(s, "a");
+  s = recordCountedSend(c.state, "a", "review",
+    { cycleId: c.cycleId, snapshotId: "s1" }).state;
+  s = recordJudgeRuling(s, "a", "review",
+    { verdict: "split", ruling: "point 1 stands, point 2 does not" }, AT);
+  const r = getPair(s, "a").judgeRulings[0];
+  assert.equal(r.cycleId, c.cycleId);
+  assert.equal(r.rounds, 1);
+});
+
+test("recordJudgeRuling rejects bad kind, bad verdict, empty ruling", () => {
+  const s = base();
+  assert.throws(
+    () => recordJudgeRuling(s, "a", "freeform",
+      { verdict: "claude", ruling: "x" }, AT), /kind/i);
+  assert.throws(
+    () => recordJudgeRuling(s, "a", "design",
+      { verdict: "maybe", ruling: "x" }, AT), /verdict/i);
+  assert.throws(
+    () => recordJudgeRuling(s, "a", "design",
+      { verdict: "claude", ruling: "  " }, AT), /ruling/i);
+});
+
+test("a judge ruling is advisory: no permit, no cap change", () => {
+  let s = base();
+  for (let i = 0; i < DESIGN_CAP; i++) {
+    s = recordCountedSend(s, "a", "design", {}).state;
+  }
+  s = recordJudgeRuling(s, "a", "design",
+    { verdict: "claude", ruling: "claude's position holds" }, AT);
+  assert.equal(getPair(s, "a").capState.design, "decisionRequired");
+  assert.throws(() => recordCountedSend(s, "a", "design", {}),
+    /override-cap/, "only the user's override grants a round");
+});
+
+test("judge rulings survive design-amend as an audit trail", () => {
+  let s = registerDesign(base(), "a", { path: "d.md", sha256: "h1" });
+  s = recordJudgeRuling(s, "a", "design",
+    { verdict: "codex", ruling: "codex wins round one" }, AT);
+  s = amendDesign(s, "a");
+  assert.equal(getPair(s, "a").judgeRulings.length, 1);
 });

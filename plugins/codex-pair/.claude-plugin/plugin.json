@@ -1,7 +1,7 @@
 {
   "name": "codex-pair",
-  "description": "Pair programming with a persistent Codex partner. Claude drives and edits files while Codex navigates and reviews in a read-only sandbox, all through one long-lived thread that survives restarts. The GPT side is set by your codex install; override per pair with the wrapper's --model flag.",
-  "version": "0.3.0",
+  "description": "Pair programming with a persistent Codex partner. Claude drives and edits files while Codex navigates and reviews in a read-only sandbox, all through one long-lived thread that survives restarts. The GPT side is set by your codex install; override per pair with the wrapper's --model flag. A Fable judge rules on deadlocks when the two sides stop converging.",
+  "version": "0.4.0",
   "author": {
     "name": "Travis Cole"
   },

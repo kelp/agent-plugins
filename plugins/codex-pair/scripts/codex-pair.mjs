@@ -53,6 +53,7 @@ import {
   completeReviewCycle,
   recordCountedSend,
   overrideCap,
+  recordJudgeRuling,
   checkReviewSendPreconditions,
   assembleSnapshot,
   snapshotIdFor,
@@ -673,6 +674,27 @@ async function main() {
       );
     });
     output({ label: opts.label, kind: opts.kind, recorded: true });
+    return;
+  }
+
+  if (opts.command === "judge") {
+    const ruling = (await readStdin()).trim();
+    if (!ruling) {
+      throw new Error("judge requires the ruling text on stdin");
+    }
+    let record;
+    await mutateState((s) => {
+      requireIdlePair(s, opts.label);
+      const next = recordJudgeRuling(
+        s, opts.label, opts.kind,
+        { verdict: opts.verdict, ruling },
+        new Date().toISOString()
+      );
+      const rulings = getPair(next, opts.label).judgeRulings;
+      record = rulings[rulings.length - 1];
+      return next;
+    });
+    output({ label: opts.label, ...record, recorded: true });
     return;
   }
 

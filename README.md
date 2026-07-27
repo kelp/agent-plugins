@@ -173,7 +173,11 @@ and reviews are gated on it; design and review round caps
 are enforced mechanically, with user overrides recorded in
 state; and a deterministic snapshot command captures
 staged, unstaged, and untracked changes without touching
-the index.
+the index. Since v0.4.0 a Fable judge rules on deadlocks:
+when a round cap is reached (or you call `/pair judge`), a
+third model reads the contested points and the code and
+says who is right. The ruling is advisory and recorded in
+state; you still decide whether the session continues.
 
 ```bash
 /plugin install codex-pair@kelp-claude-plugins
@@ -186,6 +190,8 @@ the index.
   `.codex-pair/` and hash-pinned
 - `/pair <message>` -- send a message to the pinned thread
 - `/pair review` -- ask Codex to review in a read-only sandbox
+- `/pair judge` -- have a Fable judge rule on a deadlock
+  between Claude and the partner
 - `/pair resume [label]` -- reattach to a pinned thread after
   a restart
 - `/pair status` -- show the active thread and its state
@@ -193,7 +199,7 @@ the index.
 
 The skill drives these through internal wrapper subcommands
 (design-register, design-agree, design-amend, review-start,
-review-complete, override-cap, snapshot).
+review-complete, override-cap, judge, snapshot).
 
 **Requirements:**
 - [Codex CLI](https://github.com/openai/codex) >= 0.145,
