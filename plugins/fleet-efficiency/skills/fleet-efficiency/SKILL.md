@@ -42,7 +42,7 @@ thread. Rules:
   code their finder cited is intentional redundancy; cut the
   briefing waste, not the adversarial checks.
 
-# Model tiers (pass `model` explicitly on EVERY dispatch)
+## Model tiers (pass `model` explicitly on EVERY dispatch)
 
 An unpinned agent inherits the session model — often the most
 expensive tier. Every `Agent` call and every Workflow `agent()`

@@ -59,7 +59,8 @@ plugins/
     .claude-plugin/plugin.json     # manifest (version here)
     skills/cross-review/           # orchestrator skill
     agents/                        # reviewer, validator
-    docs/                          # fragment
+    docs/                          # fragment, codex prompts,
+                                   #   merge/output reference
   codex-pair/
     .claude-plugin/plugin.json     # manifest (version here)
     skills/pair/                   # orchestrator skill

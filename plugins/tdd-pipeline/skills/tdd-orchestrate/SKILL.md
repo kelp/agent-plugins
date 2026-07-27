@@ -28,9 +28,9 @@ or fix. One sentence is enough.
 
 ## Model
 
-Agents inherit your session model by default. Sonnet
-often fails the reviewer gates and loops many times,
-which costs more wall-clock and tokens than Opus
+Agents inherit your session model by default. Cheaper
+models tend to fail the reviewer gates and loop, which
+costs more wall-clock and tokens than a capable model
 one-shotting the stage — so prefer a capable model for
 this pipeline.
 

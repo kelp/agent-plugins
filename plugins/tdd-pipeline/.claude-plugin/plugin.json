@@ -1,7 +1,7 @@
 {
   "name": "tdd-pipeline",
   "description": "Language-agnostic TDD pipeline with test-first agents, review loops, and verify gates. Agents inherit the session model, or pin one per run with --model.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": {
     "name": "Travis Cole"
   },
