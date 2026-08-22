@@ -25,8 +25,10 @@ A Claude Code plugin marketplace containing these plugins:
   deadlocks
 - **knowledge-forge** -- cross-session routing and
   capture for a three-layer personal knowledge base
-- **fleet-efficiency** -- context-handoff, prompt-cache,
-  and model-tier rules for fanning out many subagents
+- **fleet-efficiency** -- agent-fleet rules and
+  procedure: context-handoff, prompt-cache, and
+  model-tier rules for fanning out many subagents, plus
+  the two-lead operating procedure above the fan-out
 
 Users install via `/plugin marketplace add kelp/kelp-claude-plugins`,
 then `/plugin install <name>@kelp-claude-plugins`.
@@ -74,7 +76,9 @@ plugins/
     docs/                          # fragment
   fleet-efficiency/
     .claude-plugin/plugin.json     # manifest (version here)
-    skills/fleet-efficiency/       # auto-discovered rules skill
+    skills/                        # fleet-efficiency (fan-out
+                                   #   rules), fleet-lead (two-lead
+                                   #   procedure); both auto-discovered
 ```
 
 ## Key Conventions

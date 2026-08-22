@@ -10,8 +10,8 @@ Claude Code plugins by kelp:
 - **codex-pair** -- pairs with a persistent Codex partner
 - **knowledge-forge** -- captures notes and routes
   retrieval for a personal knowledge base
-- **fleet-efficiency** -- token-efficient rules for
-  fanning out many subagents
+- **fleet-efficiency** -- runs agent fleets: token rules
+  for fan-out, and a two-lead operating procedure
 
 ## Install
 
@@ -234,22 +234,34 @@ bucket conventions if you adopt it.
 
 ### fleet-efficiency
 
-Context-handoff, prompt-cache, and model-tier rules for
-fanning out many subagents. A single auto-discovered
-skill loads before large parallel agent dispatches,
-Workflow scripts, audits, and migrations: scout once and
-brief many, keep fleet prompts byte-identical for the
-prompt cache, hand structured artifacts between pipeline
-stages, and name a model tier on every dispatch.
+Two skills for running agent fleets.
+
+`fleet-efficiency` loads before large parallel agent
+dispatches, Workflow scripts, audits, and migrations:
+scout once and brief many, keep fleet prompts
+byte-identical for the prompt cache, hand structured
+artifacts between pipeline stages, and name a model tier
+on every dispatch.
+
+`fleet-lead` runs the sessions above the fan-out. A drive
+lead claims work units, signs commits, and opens PRs; a
+gate lead watches CI, drains review threads, reads
+heartbeats, and restarts a dead unit from the ledger.
+Only a main loop can sign a commit, and a session stalled
+at that gate looks exactly like a session doing work.
+Claiming a unit runs a file-disjointness check against
+everything in flight; shared-code units run alone.
 
 ```bash
 /plugin install fleet-efficiency@kelp-claude-plugins
 ```
 
-No commands, hooks, or agents; the skill is
+No commands, hooks, or agents; both skills are
 model-invoked. The model-tier names (sonnet, opus,
 fable) assume Anthropic's current lineup; adjust the
-skill text if yours differs.
+skill text if yours differs. `fleet-lead` expects the
+project to define its ledger, unit definition, worktree
+root, caps, gates, and pipelines.
 
 ## Composition
 

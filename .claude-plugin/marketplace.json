@@ -48,7 +48,7 @@
     {
       "name": "fleet-efficiency",
       "source": "./plugins/fleet-efficiency",
-      "description": "Context-handoff, prompt-cache, and model-tier rules for fanning out many subagents. Auto-loads before large parallel agent dispatches, Workflow scripts, audits, and migrations.",
+      "description": "Rules and procedure for running agent fleets: context-handoff, prompt-cache, and model-tier rules for fanning out many subagents, plus a two-lead operating procedure for long-running fleets with unit claiming, heartbeats, and restart from a ledger.",
       "strict": false
     }
   ]
