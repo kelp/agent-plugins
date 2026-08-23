@@ -54,8 +54,8 @@ own `CLAUDE.md`; the skill lists them.
 ## Installation
 
 ```
-/plugin marketplace add kelp/kelp-claude-plugins
-/plugin install fleet-efficiency@kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
+/plugin install fleet-efficiency@agent-plugins
 ```
 
 No configuration beyond the project binding above. Both

@@ -1,4 +1,4 @@
-# kelp-agent-plugins
+# agent-plugins
 
 Claude Code plugins by kelp:
 
@@ -12,11 +12,13 @@ Claude Code plugins by kelp:
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
   for fan-out, and a two-lead operating procedure
+- **next-todo** -- lands one TODO.md PR slice: plan
+  review, TDD, draft PR, comment drain
 
 ## Install
 
 ```bash
-/plugin marketplace add kelp/kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
 ```
 
 ## Plugins
@@ -29,7 +31,7 @@ patterns to your project's CLAUDE.md so every agent
 reads them.
 
 ```bash
-/plugin install zig-claude-kit@kelp-claude-plugins
+/plugin install zig-claude-kit@agent-plugins
 ```
 
 Open a Zig project. The plugin detects Zig source files
@@ -55,7 +57,7 @@ CLAUDE.md.
 [tiger]: https://github.com/tigerbeetle/tigerbeetle/blob/main/docs/TIGER_STYLE.md
 
 ```bash
-/plugin install tiger-style@kelp-claude-plugins
+/plugin install tiger-style@agent-plugins
 ```
 
 Open a Zig project. The plugin detects Zig source files
@@ -81,7 +83,7 @@ into seven stages across separate agents -- no single
 agent both writes and reviews code.
 
 ```bash
-/plugin install tdd-pipeline@kelp-claude-plugins
+/plugin install tdd-pipeline@agent-plugins
 ```
 
 Run `/tdd-init` to configure your project, then
@@ -117,7 +119,7 @@ validate the other's findings against the actual code,
 and merges the result into one prioritized fix list.
 
 ```bash
-/plugin install cross-review@kelp-claude-plugins
+/plugin install cross-review@agent-plugins
 ```
 
 Run `/cross-review` on uncommitted changes, or pass a
@@ -180,7 +182,7 @@ says who is right. The ruling is advisory and recorded in
 state; you still decide whether the session continues.
 
 ```bash
-/plugin install codex-pair@kelp-claude-plugins
+/plugin install codex-pair@agent-plugins
 ```
 
 **Commands:**
@@ -216,7 +218,7 @@ before answering retrieval questions. Two slash commands
 write into the base.
 
 ```bash
-/plugin install knowledge-forge@kelp-claude-plugins
+/plugin install knowledge-forge@agent-plugins
 ```
 
 **Commands:**
@@ -253,7 +255,7 @@ Claiming a unit runs a file-disjointness check against
 everything in flight; shared-code units run alone.
 
 ```bash
-/plugin install fleet-efficiency@kelp-claude-plugins
+/plugin install fleet-efficiency@agent-plugins
 ```
 
 No commands, hooks, or agents; both skills are
@@ -262,6 +264,32 @@ fable) assume Anthropic's current lineup; adjust the
 skill text if yours differs. `fleet-lead` expects the
 project to define its ledger, unit definition, worktree
 root, caps, gates, and pipelines.
+
+### next-todo
+
+Land one `TODO.md` PR slice. The plugin is the
+operating procedure: choose the next slice, write a
+plan, review it to consensus, implement with red-green
+TDD, open a draft pull request, and drain review
+comments until CI is green. A project supplies seven
+binding values in its own CLAUDE.md.
+
+```bash
+/plugin install next-todo@agent-plugins
+```
+
+Run `/next-todo-init` to append the binding template,
+fill in the values, then `/next-todo` (or
+`/next-todo <slice heading>`).
+
+**Commands:**
+- `/next-todo [slice]` -- land one TODO.md PR slice
+- `/next-todo-init` -- inject the binding template into
+  CLAUDE.md
+
+Plan and patch review use three axes (Grok, Sol, Opus
+5) unless the binding names replacements. A
+non-behavior exception uses Sol only.
 
 ## Composition
 
@@ -274,6 +302,8 @@ CLAUDE.md connects these plugins:
    optional review focus
 5. `knowledge-forge` reads the `knowledge-base:` path
    from the active project CLAUDE.md
+6. `next-todo` reads the Next TODO binding (backlog,
+   plan, spec, gates, CI, review axes, rules)
 
 ## License
 

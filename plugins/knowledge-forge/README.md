@@ -37,8 +37,8 @@ drafting, note quality — not code.
 ## Installation
 
 ```
-/plugin marketplace add kelp/kelp-claude-plugins
-/plugin install knowledge-forge@kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
+/plugin install knowledge-forge@agent-plugins
 ```
 
 ## Configuration (optional)

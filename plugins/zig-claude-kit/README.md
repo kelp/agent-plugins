@@ -73,8 +73,8 @@ Additional patterns covered for **0.16.x**:
 ## Install
 
 ```bash
-/plugin marketplace add kelp/kelp-claude-plugins
-/plugin install zig-claude-kit@kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
+/plugin install zig-claude-kit@agent-plugins
 ```
 
 ## Use

@@ -29,9 +29,12 @@ A Claude Code plugin marketplace containing these plugins:
   procedure: context-handoff, prompt-cache, and
   model-tier rules for fanning out many subagents, plus
   the two-lead operating procedure above the fan-out
+- **next-todo** -- land one TODO.md PR slice: plan
+  review to consensus, red-green TDD, draft PR, comment
+  drain; project bindings live in CLAUDE.md
 
-Users install via `/plugin marketplace add kelp/kelp-claude-plugins`,
-then `/plugin install <name>@kelp-claude-plugins`.
+Users install via `/plugin marketplace add kelp/agent-plugins`,
+then `/plugin install <name>@agent-plugins`.
 
 ## Repository Structure
 
@@ -79,6 +82,10 @@ plugins/
     skills/                        # fleet-efficiency (fan-out
                                    #   rules), fleet-lead (two-lead
                                    #   procedure); both auto-discovered
+  next-todo/
+    .claude-plugin/plugin.json     # manifest (version here)
+    skills/                        # next-todo, next-todo-init
+    docs/                          # CLAUDE.md binding fragment
 ```
 
 ## Key Conventions
@@ -139,19 +146,20 @@ Each of these caused a real bug; none is guessable:
 
 CLAUDE.md is the integration point between plugins.
 Language plugins (zig-claude-kit) append corrections.
-Process plugins (tdd-pipeline) read test commands and
-file patterns. No code-level coupling between plugins.
+Process plugins (tdd-pipeline, next-todo) read test
+commands, file patterns, and bindings. No code-level
+coupling between plugins.
 
 ## Heads-up: edit here, not the installed copies
 
-This repo (`~/code/kelp-claude-plugins`) is the only place to
+This repo (`~/code/agent-plugins`) is the only place to
 edit. Claude Code keeps two other copies that look editable but
 aren't the source:
 
-- `~/.claude/plugins/marketplaces/kelp-claude-plugins/` — a
+- `~/.claude/plugins/marketplaces/agent-plugins/` — a
   plugin-system-managed clone; local edits there fight the next
   marketplace update.
-- `~/.claude/plugins/cache/kelp-claude-plugins/<plugin>/<ver>/` —
+- `~/.claude/plugins/cache/agent-plugins/<plugin>/<ver>/` —
   what running sessions actually load.
 
 Changes take effect only after bumping the plugin's version in

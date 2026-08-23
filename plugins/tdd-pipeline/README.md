@@ -42,8 +42,8 @@ context the agent already built up.
 ## Install
 
 ```bash
-/plugin marketplace add kelp/kelp-claude-plugins
-/plugin install tdd-pipeline@kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
+/plugin install tdd-pipeline@agent-plugins
 ```
 
 ## Setup

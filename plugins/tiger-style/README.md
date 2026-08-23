@@ -48,8 +48,8 @@ follows the same rules.
 ## Install
 
 ```bash
-/plugin marketplace add kelp/kelp-claude-plugins
-/plugin install tiger-style@kelp-claude-plugins
+/plugin marketplace add kelp/agent-plugins
+/plugin install tiger-style@agent-plugins
 ```
 
 ## Use

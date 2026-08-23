@@ -1,0 +1,10 @@
+{
+  "name": "next-todo",
+  "description": "Land one TODO.md PR slice: choose the next slice, review the plan to consensus, implement with red-green TDD, open a draft pull request, and drain review comments until CI is green.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Travis Cole"
+  },
+  "homepage": "https://github.com/kelp/agent-plugins",
+  "repository": "https://github.com/kelp/agent-plugins"
+}
