@@ -1,4 +1,4 @@
-# kelp-claude-plugins
+# kelp-agent-plugins
 
 Claude Code plugins by kelp:
 
