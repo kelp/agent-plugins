@@ -29,9 +29,9 @@ A Claude Code plugin marketplace containing these plugins:
   procedure: context-handoff, prompt-cache, and
   model-tier rules for fanning out many subagents, plus
   the two-lead operating procedure above the fan-out
-- **next-todo** -- land one TODO.md PR slice: plan
-  review to consensus, red-green TDD, draft PR, comment
-  drain; project bindings live in CLAUDE.md
+- **next-todo** -- land one GitHub child issue as one
+  PR: plan review to consensus, red-green TDD, draft PR,
+  comment drain; project bindings live in CLAUDE.md
 
 Users install via `/plugin marketplace add kelp/agent-plugins`,
 then `/plugin install <name>@agent-plugins`.

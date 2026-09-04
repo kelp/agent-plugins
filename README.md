@@ -12,8 +12,8 @@ Claude Code plugins by kelp:
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
   for fan-out, and a two-lead operating procedure
-- **next-todo** -- lands one TODO.md PR slice: plan
-  review, TDD, draft PR, comment drain
+- **next-todo** -- lands one GitHub child issue as one
+  PR: plan review, TDD, draft PR, comment drain
 
 ## Install
 
@@ -267,9 +267,9 @@ root, caps, gates, and pipelines.
 
 ### next-todo
 
-Land one `TODO.md` PR slice. The plugin is the
-operating procedure: choose the next slice, write a
-plan, review it to consensus, implement with red-green
+Land one GitHub child issue as one pull request. The
+plugin is the operating procedure: choose the next child
+issue, write a plan, review it to consensus, implement with red-green
 TDD, open a draft pull request, and drain review
 comments until CI is green. A project supplies seven
 binding values in its own CLAUDE.md.
@@ -280,10 +280,11 @@ binding values in its own CLAUDE.md.
 
 Run `/next-todo-init` to append the binding template,
 fill in the values, then `/next-todo` (or
-`/next-todo <slice heading>`).
+`/next-todo <issue-number>`).
 
 **Commands:**
-- `/next-todo [slice]` -- land one TODO.md PR slice
+- `/next-todo [issue-number]` -- land one GitHub child
+  issue as one PR
 - `/next-todo-init` -- inject the binding template into
   CLAUDE.md
 
