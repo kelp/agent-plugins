@@ -42,3 +42,6 @@ Tell the user what you did:
 
 Tell the user to fill in the seven binding values:
 backlog, plan, spec, gates, CI, review axes, and rules.
+The backlog is a GitHub repository. Tell the user to
+create the labels `parent`, `ready`, `in-progress`, and
+`blocked` in that repository when they do not exist.

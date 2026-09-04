@@ -54,7 +54,7 @@
     {
       "name": "next-todo",
       "source": "./plugins/next-todo",
-      "description": "Land one TODO.md PR slice: choose the next slice, review the plan to consensus, implement with red-green TDD, open a draft pull request, and drain review comments until CI is green.",
+      "description": "Land one GitHub child issue as one pull request: choose the next child issue, review the plan to consensus, implement with red-green TDD, open a draft pull request, and drain review comments until CI is green.",
       "strict": false
     }
   ]

@@ -1,9 +1,9 @@
 # next-todo
 
-Land one `TODO.md` PR slice: choose the next slice, write
-a plan, review it to consensus, implement with red-green
-TDD, open a draft pull request, and drain review comments
-until CI is green.
+Land one GitHub child issue as one pull request: choose the
+next child issue, write a plan, review it to consensus,
+implement with red-green TDD, open a draft pull request, and
+drain review comments until CI is green.
 
 ## What it does
 
@@ -37,12 +37,28 @@ Sol only. The parent watches CI. Reviewers do not poll.
 
 ```
 /next-todo
-/next-todo <slice heading>
+/next-todo <issue-number>
 ```
 
-With no argument, the skill picks the next slice from
-the backlog binding. With an argument, that heading is
-the slice, if its predecessors are already on `main`.
+The backlog is GitHub Issues in the repository the binding
+names. A `parent` label marks a category issue. A child
+issue carries `ready`, `in-progress`, or `blocked`. One
+child issue is one pull request.
+
+With no argument, the skill takes the first child, in the
+order the parent issue body gives, that carries `ready` or
+`in-progress`. It skips `blocked` children and `parent`
+issues. With an issue number, that child is the slice, and
+the skill asks no question. In both cases the skill stops
+when a blocker holds: a `blocked` label, a `blocked` parent,
+or a Depends-on predecessor that is not yet on `main`.
+
+When it opens the draft pull request, the skill moves the
+child from `ready` to `in-progress` and puts
+`Closes #<child>` in the body. `TODO.md` is an archive: the
+skill checks off a heading only when the child issue claims
+it. A defect found during the slice becomes a new issue,
+not a `TODO.md` line.
 
 ## Composition
 
@@ -55,7 +71,7 @@ code-level coupling.
 ## Skills
 
 **User-invocable:**
-- `next-todo` -- land one TODO.md PR slice
+- `next-todo` -- land one GitHub child issue as one PR
 - `next-todo-init` -- add the binding template to
   CLAUDE.md
 
