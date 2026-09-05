@@ -43,6 +43,8 @@ Sol only. The parent watches CI. Reviewers do not poll.
 ```
 /next-issue
 /next-issue <issue-number>
+/next-parent
+/next-parent <parent-issue-number-or-title>
 ```
 
 The backlog is GitHub Issues in the repository the
@@ -74,13 +76,19 @@ This plugin is the operating procedure for one slice.
 can name `next-issue` as a pipeline. There is no
 code-level coupling.
 
-A parent-category orchestrator (`/next-parent`) can run
-this skill once per child. That skill is separate.
+`/next-parent` lands one parent GitHub issue. It picks
+the parent of the next ready sub-issue, or the parent
+the user names, then runs `/next-issue` once per
+remaining open sub-issue. Each slice branches from the
+previous slice's HEAD and opens a draft PR against
+`main`. That is a commit stack, not a stacked-PR base.
 
 ## Skills
 
 **User-invocable:**
-- `next-issue` -- land one GitHub child issue as one PR
+- `next-issue` -- land one GitHub sub-issue as one PR
+- `next-parent` -- land one parent issue's remaining
+  sub-issues, one `/next-issue` run each
 - `next-issue-init` -- add the binding template to
   CLAUDE.md
 

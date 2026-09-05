@@ -13,8 +13,9 @@ Claude Code plugins by kelp:
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
   for fan-out, and a two-lead operating procedure
-- **next-issue** -- lands one GitHub child issue as one
-  PR: plan review, TDD, draft PR, comment drain
+- **next-issue** -- lands one GitHub sub-issue as one
+  PR, or one parent issue's remaining sub-issues as a
+  stack
 
 ## Install
 
@@ -264,10 +265,14 @@ binding values in its own CLAUDE.md.
 Run `/next-issue-init` to append the binding template,
 fill in the values, then `/next-issue` (or
 `/next-issue <issue-number>`). Previously `next-todo`.
+`/next-parent` runs `/next-issue` once per remaining
+open sub-issue of one parent issue.
 
 **Commands:**
-- `/next-issue [issue-number]` -- land one GitHub child
-  issue as one PR
+- `/next-issue [issue-number]` -- land one GitHub
+  sub-issue as one PR
+- `/next-parent [parent]` -- land one parent issue's
+  remaining sub-issues, one `/next-issue` run each
 - `/next-issue-init` -- inject the binding template into
   CLAUDE.md
 

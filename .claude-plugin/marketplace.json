@@ -54,7 +54,7 @@
     {
       "name": "next-issue",
       "source": "./plugins/next-issue",
-      "description": "Land one GitHub child issue as one pull request: choose the next child issue, review the plan to consensus, implement with red-green TDD, open a draft pull request, and drain review comments until CI is green.",
+      "description": "Land one GitHub sub-issue as one pull request, or one parent issue's remaining sub-issues as a commit stack.",
       "strict": false
     }
   ]

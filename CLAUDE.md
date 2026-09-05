@@ -27,9 +27,10 @@ A Claude Code plugin marketplace containing these plugins:
   procedure: context-handoff, prompt-cache, and
   model-tier rules for fanning out many subagents, plus
   the two-lead operating procedure above the fan-out
-- **next-issue** -- land one GitHub child issue as one
-  PR: plan review to consensus, red-green TDD, draft PR,
-  comment drain; project bindings live in CLAUDE.md
+- **next-issue** -- land one GitHub sub-issue as one
+  PR; `/next-parent` runs it once per remaining
+  sub-issue of one parent issue; bindings live in
+  CLAUDE.md
 
 Users install via `/plugin marketplace add kelp/agent-plugins`,
 then `/plugin install <name>@agent-plugins`.
@@ -83,7 +84,8 @@ plugins/
                                    #   procedure); both auto-discovered
   next-issue/
     .claude-plugin/plugin.json     # manifest (version here)
-    skills/                        # next-issue, next-issue-init
+    skills/                        # next-issue, next-parent,
+                                   #   next-issue-init
     docs/                          # CLAUDE.md binding fragment
 ```
 
