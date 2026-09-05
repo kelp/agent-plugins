@@ -132,9 +132,13 @@ that already has an open PR:
 2. If an open PR against `main` already claims this
    sub-issue, record its URL and tip SHA. Read
    `<recorded-prev-tip>` from the range in the PR body
-   and compare it with the previous slice's current tip.
-   An ancestry test is not enough: a rewound predecessor
-   still passes it. If the two differ, rebase
+   and check two things. First, `<recorded-prev-tip>`
+   is an ancestor of the remote slice tip; if it is not,
+   the body describes a push that did not land, so stop
+   and report. Second, `<recorded-prev-tip>` equals the
+   previous slice's current tip; an ancestry test alone
+   is not enough, because a rewound predecessor still
+   passes it. If the two differ, rebase
    `<recorded-prev-tip>..HEAD` onto the current tip, run
    **Gates**, update the range in the PR body, then push
    with `--force-with-lease`. Stop and report if that
