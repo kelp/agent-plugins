@@ -27,7 +27,7 @@ A Claude Code plugin marketplace containing these plugins:
   procedure: context-handoff, prompt-cache, and
   model-tier rules for fanning out many subagents, plus
   the two-lead operating procedure above the fan-out
-- **next-todo** -- land one GitHub child issue as one
+- **next-issue** -- land one GitHub child issue as one
   PR: plan review to consensus, red-green TDD, draft PR,
   comment drain; project bindings live in CLAUDE.md
 
@@ -81,9 +81,9 @@ plugins/
     skills/                        # fleet-efficiency (fan-out
                                    #   rules), fleet-lead (two-lead
                                    #   procedure); both auto-discovered
-  next-todo/
+  next-issue/
     .claude-plugin/plugin.json     # manifest (version here)
-    skills/                        # next-todo, next-todo-init
+    skills/                        # next-issue, next-issue-init
     docs/                          # CLAUDE.md binding fragment
 ```
 
@@ -144,7 +144,7 @@ Each of these caused a real bug; none is guessable:
 
 CLAUDE.md is the integration point between plugins.
 Language plugins (zig-claude-kit) append corrections.
-Process plugins (tdd-pipeline, next-todo) read test
+Process plugins (tdd-pipeline, next-issue) read test
 commands, file patterns, and bindings.
 
 `pair` locates the cross-review harness broker at

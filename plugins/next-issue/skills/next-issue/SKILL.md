@@ -1,17 +1,17 @@
 ---
-name: next-todo
+name: next-issue
 description: >
   Land one GitHub child issue as one pull request: choose the next child
   issue, write a plan, review the plan (three axes, or Sol only for a
   non-behavior exception), implement with red-green TDD, open a draft pull
   request, and drain review comments until CI is green and no threads
   remain. Use when starting a slice, landing the next child issue, planning
-  a slice, doing the next TODO item, or when asked to address all PR review
-  comments until they are fixed.
+  a slice, or when asked to address all PR review comments until they are
+  fixed. Previously /next-todo.
 user-invocable: true
 ---
 
-# /next-todo
+# /next-issue
 
 Do this whole procedure for one slice. Do not skip the plan review. Do not
 skip the comment drain. Do not start a second slice in the same change.
@@ -26,13 +26,15 @@ Slice: $ARGUMENTS
 
 - Empty → pick the next child issue from the backlog (§1).
 - An issue number → that child issue is the slice. Do not ask the user
-  which issue to take. An orchestrator such as `/next-section` passes this
+  which issue to take. An orchestrator such as `/next-parent` passes this
   number once per child.
 
 ## Binding
 
-Read `## Next TODO binding` in the project's CLAUDE.md. If that heading is
-missing, stop and tell the user to run `/next-todo-init` first.
+Read `## Next issue binding` in the project's CLAUDE.md. If
+that heading is missing, read `## Next TODO binding` (the
+old name). If both are missing, stop and tell the user to
+run `/next-issue-init` first.
 
 Every value marked *(binding)* below comes from that section:
 

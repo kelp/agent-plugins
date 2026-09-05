@@ -13,7 +13,7 @@ Claude Code plugins by kelp:
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
   for fan-out, and a two-lead operating procedure
-- **next-todo** -- lands one GitHub child issue as one
+- **next-issue** -- lands one GitHub child issue as one
   PR: plan review, TDD, draft PR, comment drain
 
 ## Install
@@ -248,7 +248,7 @@ skill text if yours differs. `fleet-lead` expects the
 project to define its ledger, unit definition, worktree
 root, caps, gates, and pipelines.
 
-### next-todo
+### next-issue
 
 Land one GitHub child issue as one pull request. The
 plugin is the operating procedure: choose the next child
@@ -258,17 +258,17 @@ comments until CI is green. A project supplies seven
 binding values in its own CLAUDE.md.
 
 ```bash
-/plugin install next-todo@agent-plugins
+/plugin install next-issue@agent-plugins
 ```
 
-Run `/next-todo-init` to append the binding template,
-fill in the values, then `/next-todo` (or
-`/next-todo <issue-number>`).
+Run `/next-issue-init` to append the binding template,
+fill in the values, then `/next-issue` (or
+`/next-issue <issue-number>`). Previously `next-todo`.
 
 **Commands:**
-- `/next-todo [issue-number]` -- land one GitHub child
+- `/next-issue [issue-number]` -- land one GitHub child
   issue as one PR
-- `/next-todo-init` -- inject the binding template into
+- `/next-issue-init` -- inject the binding template into
   CLAUDE.md
 
 Plan and patch review use three axes (Grok, Sol, Opus
@@ -286,7 +286,7 @@ CLAUDE.md connects these plugins:
    and `grok` CLIs on PATH through a warm process pool
 5. `knowledge-forge` reads the `knowledge-base:` path
    from the active project CLAUDE.md
-6. `next-todo` reads the Next TODO binding (backlog,
+6. `next-issue` reads the Next issue binding (backlog,
    plan, spec, gates, CI, review axes, rules)
 
 ## License

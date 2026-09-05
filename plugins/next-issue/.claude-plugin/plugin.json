@@ -1,7 +1,7 @@
 {
-  "name": "next-todo",
+  "name": "next-issue",
   "description": "Land one GitHub child issue as one pull request: choose the next child issue, review the plan to consensus, implement with red-green TDD, open a draft pull request, and drain review comments until CI is green.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Travis Cole"
   },

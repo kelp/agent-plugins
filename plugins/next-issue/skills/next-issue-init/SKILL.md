@@ -1,15 +1,15 @@
 ---
-name: next-todo-init
+name: next-issue-init
 description: >
-  Add Next TODO binding to this project's CLAUDE.md.
-  Run this to set up the next-todo plugin for a new
+  Add Next issue binding to this project's CLAUDE.md.
+  Run this to set up the next-issue plugin for a new
   project.
 user-invocable: true
 ---
 
-# /next-todo-init
+# /next-issue-init
 
-Add Next TODO binding to this project's CLAUDE.md.
+Add Next issue binding to this project's CLAUDE.md.
 
 ## Procedure
 
@@ -17,7 +17,7 @@ Add Next TODO binding to this project's CLAUDE.md.
 
 Read the file at
 `${CLAUDE_PLUGIN_ROOT}/docs/claude-md-fragment.md`.
-This contains the Next TODO binding template formatted
+This contains the Next issue binding template formatted
 as a CLAUDE.md section.
 
 ### 2. Check current CLAUDE.md
@@ -26,17 +26,18 @@ as a CLAUDE.md section.
   one with just a `# CLAUDE.md` header followed by the
   fragment content.
 - If `CLAUDE.md` exists, check if it already contains
-  "Next TODO binding". If so, report "Next TODO binding
-  already present" and stop.
-- If `CLAUDE.md` exists but lacks the binding, append
+  "Next issue binding" or the old heading "Next TODO
+  binding". If so, report that the binding is already
+  present and stop. Do not add a second copy.
+- If `CLAUDE.md` exists but lacks both headings, append
   the fragment content to the end of the file.
 
 ### 3. Report result
 
 Tell the user what you did:
-- "Created CLAUDE.md with Next TODO binding"
-- "Added Next TODO binding to existing CLAUDE.md"
-- "Next TODO binding already present in CLAUDE.md"
+- "Created CLAUDE.md with Next issue binding"
+- "Added Next issue binding to existing CLAUDE.md"
+- "Issue binding already present in CLAUDE.md"
 
 ### 4. Next steps
 
@@ -45,3 +46,5 @@ backlog, plan, spec, gates, CI, review axes, and rules.
 The backlog is a GitHub repository. Tell the user to
 create the labels `parent`, `ready`, `in-progress`, and
 `blocked` in that repository when they do not exist.
+
+Previously this command was `/next-todo-init`.
