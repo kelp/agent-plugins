@@ -94,8 +94,9 @@ Then pick a mode:
   open PR against `main`, or the user asked only to fix
   review comments. Go to §3.
 - **Resume** — some have open PRs and later ones do
-  not. Continue from the last open slice's HEAD. Go to
-  §2 for the missing sub-issues.
+  not. Go to §2 for every remaining sub-issue, from the
+  first. §2 reuses an existing PR and creates a missing
+  one. Do not jump to the first missing sub-issue.
 - **Create** — none have an open PR against `main`.
   Confirm local `main` matches `origin/main`. Go to §2.
 
@@ -104,7 +105,9 @@ Then pick a mode:
 Before each remaining sub-issue H, in list order, stop
 and report if any of these hold. Do not skip H. Do not
 start later sub-issues. A parent ordered A (`ready`),
-B (`blocked`), C (`ready`) lands A, then stops at B.
+B (`blocked`), C (`ready`) lands A, then stops at B. The
+same holds on Resume: A (open PR), B (open PR, now
+`blocked`), C (no PR) stops at B and does not create C.
 
 - H or the parent carries `blocked`.
 - A Depends-on clause names a predecessor that is not
@@ -113,19 +116,24 @@ B (`blocked`), C (`ready`) lands A, then stops at B.
 
 ## 2. Run next-issue once per sub-issue
 
-For each remaining sub-issue, in order:
+For each remaining sub-issue, in order, including one
+that already has an open PR:
 
 1. Evaluate blockers. If one holds, stop and report.
-2. Load `next-issue`. Pass the sub-issue number, that
+2. If an open PR against `main` already claims this
+   sub-issue, record its URL and tip SHA. Continue to
+   the next sub-issue from that tip. Do not open a
+   second PR.
+3. Load `next-issue`. Pass the sub-issue number, that
    this is one slice in a `/next-parent` session, and
    the overlay above. Do not tell it to pick from
    `TODO.md`.
-3. Let it plan, review, implement, and open a **draft**
+4. Let it plan, review, implement, and open a **draft**
    PR against `main`.
-4. Do not wait for human review before the next
+5. Do not wait for human review before the next
    sub-issue. If you push a fix to slice k, rebase later
    section branches onto that HEAD before you continue.
-5. Record the PR URL and the slice tip SHA, then run
+6. Record the PR URL and the slice tip SHA, then run
    `next-issue` for the next sub-issue.
 
 After the last sub-issue has a PR, report every PR URL
