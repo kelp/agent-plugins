@@ -17,12 +17,10 @@ A Claude Code plugin marketplace containing these plugins:
   four agent roles across a seven-stage pipeline (the
   red/verify/integrate gates run in the orchestrator,
   not as separate agents)
-- **cross-review** -- multi-model code review with
-  cross-validation using Claude and GPT-5.5
-- **codex-pair** -- pair programming with a persistent
-  Codex partner over one long-lived thread (model set
-  by the user's Codex install), with a Fable judge for
-  deadlocks
+- **cross-review** -- native reviews from Claude, Codex,
+  and/or Grok (any set), via a warm process pool
+- **codex-pair** -- pair with a persistent Codex, Grok,
+  or Claude navigator; Fable judge when Claude drives
 - **knowledge-forge** -- cross-session routing and
   capture for a three-layer personal knowledge base
 - **fleet-efficiency** -- agent-fleet rules and
@@ -64,13 +62,14 @@ plugins/
   cross-review/
     .claude-plugin/plugin.json     # manifest (version here)
     skills/cross-review/           # orchestrator skill
-    agents/                        # reviewer, validator
-    docs/                          # fragment, codex prompts,
-                                   #   merge/output reference
+    scripts/                       # harness pool CLI + broker
+    agents/                        # legacy custom-schema roles
+    docs/                          # fragment, merge/output ref
   codex-pair/
     .claude-plugin/plugin.json     # manifest (version here)
     skills/pair/                   # orchestrator skill
-    scripts/                       # codex-pair.mjs, lib.mjs
+    scripts/                       # pair CLI; warm pool via
+                                   #   cross-review harness broker
     tests/                         # cli.test.mjs, lib.test.mjs
   knowledge-forge/
     .claude-plugin/plugin.json     # manifest (version here)
@@ -133,10 +132,9 @@ Each of these caused a real bug; none is guessable:
   0.1N.x Training Corrections`). Change a fragment's
   heading without updating the grep in session-start.sh
   and the hook re-fires every session.
-- cross-review's fragment ships `codex-script:` and
-  `review-focus:` commented out on purpose;
-  sentinel-shaped values mean "unset". Don't uncomment
-  them.
+- cross-review native reviews need `claude`, `codex`,
+  and/or `grok` on PATH. Do not route them through the
+  Codex companion `task` path.
 - Model ids and the codex dependency name appear in
   README, CLAUDE.md, plugin.json, and SKILL.md. Update
   all four in one pass; partial renames have shipped

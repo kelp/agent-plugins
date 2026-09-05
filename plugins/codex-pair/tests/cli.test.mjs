@@ -30,6 +30,7 @@ before(() => {
   env = {
     ...process.env,
     PATH: `${dir}:${process.env.PATH}`,
+    HARNESS_PAIR_TRANSPORT: "exec",
     CODEX_PAIR_STATE_FILE: path.join(dir, "state", "pairs.json"),
     FAKE_ARGS: path.join(dir, "args.txt"),
     FAKE_STDIN: path.join(dir, "stdin.txt")

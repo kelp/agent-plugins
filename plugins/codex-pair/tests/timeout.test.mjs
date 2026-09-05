@@ -39,6 +39,7 @@ before(() => {
   env = {
     ...process.env,
     PATH: `${dir}:${process.env.PATH}`,
+    HARNESS_PAIR_TRANSPORT: "exec",
     CODEX_PAIR_STATE_FILE: stateFile,
     FAKE_TICKS: path.join(dir, "ticks.txt")
   };

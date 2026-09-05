@@ -6,8 +6,9 @@ Claude Code plugins by kelp:
 - **tiger-style** -- applies TigerBeetle's Tiger Style to
   Zig projects
 - **tdd-pipeline** -- enforces TDD across separate agents
-- **cross-review** -- gets a second opinion from GPT-5.5
-- **codex-pair** -- pairs with a persistent Codex partner
+- **cross-review** -- native reviews from Claude, Codex,
+  and/or Grok
+- **codex-pair** -- pairs with Codex, Grok, or Claude
 - **knowledge-forge** -- captures notes and routes
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
@@ -112,62 +113,36 @@ any language.
 
 ### cross-review
 
-A single model reviewing its own work misses bugs it
-would catch in someone else's. This plugin runs
-independent Claude and GPT-5.5 reviews, has each model
-validate the other's findings against the actual code,
-and merges the result into one prioritized fix list.
+Native reviews from Claude (`/code-review`), Codex
+(`codex review` via app-server), and Grok (`/review`).
+Name one harness or any set. Same-harness reviews stay
+in-process. Foreign reviews go through a warm process
+pool so the second call in a repo skips cold start.
 
 ```bash
 /plugin install cross-review@agent-plugins
 ```
 
-Run `/cross-review` on uncommitted changes, or pass a
-scope: `/cross-review src/parser.zig` or `/cross-review
-last 2 commits`. Disputed findings are separated from
-confirmed ones so humans can triage them.
+```
+/cross-review
+/cross-review grok
+/cross-review grok claude --target branch:main
+```
 
-**Flags:**
-- `--quick` -- skip cross-validation, merge raw findings
-- `--reconcile` -- let each model defend its disputed
-  findings in one follow-up round
-- `--model <name>` -- run the Claude-side agents on a
-  specific model (e.g. `opus`) instead of the session
-  model; the GPT side is set by your codex install
-
-**Requirements:**
-- [Codex CLI](https://github.com/openai/codex),
-  authenticated for GPT-5.5 access
-- [codex-plugin-cc](https://github.com/openai/codex-plugin-cc),
-  OpenAI's Claude Code plugin that bridges Codex to
-  Claude Code. It installs via its `openai-codex`
-  marketplace and ships the companion script we call.
-  By default the plugin looks for that script at
-  `$HOME/.claude/plugins/marketplaces/openai-codex/plugins/codex/scripts/codex-companion.mjs`.
-  If you installed codex-plugin-cc elsewhere, set
-  `codex-script:` in your project CLAUDE.md to the
-  actual path — for security, the resolved path must
-  be under `$HOME/.claude/plugins/`.
-- Node.js on `PATH` to run the companion script
-
-Without these, `/cross-review` falls back to claude-only
-mode and runs a single-model review.
+**Requirements:** the `claude`, `codex`, and/or `grok`
+CLIs on PATH for the callees you want. Missing binaries
+are skipped. Node.js is required for the pool CLI.
 
 ### codex-pair
 
-Pair programming with a persistent Codex partner. `/pair start`
-pins a long-lived Codex thread; every `/pair` message, review,
-and verdict after that flows through the same thread for the
-rest of the session, so both sides keep full context. Claude
-drives -- it edits files -- while Codex navigates, reviewing in
-a read-only sandbox. State lives in
-`~/.claude/codex-pair/pairs.json` so `/pair resume` reattaches
-the thread after a restart. The GPT side is set by your codex
-install; override per pair with the wrapper's `--model` flag.
+Pair programming with a persistent navigator on Codex, Grok,
+or Claude. `/pair start --harness grok` pins a warm session;
+later sends are turns, not boots. The current session drives
+(edits, tests). The named harness navigates read-only. Default
+navigator is Codex. You cannot pair with yourself.
 
 This complements cross-review: cross-review is a one-shot
-second opinion, codex-pair is a continuous partner that
-remembers the whole conversation.
+native review; pair is a continuous partner.
 
 Since v0.3.0 the workflow is first-class: an agreed design
 artifact lives in the repo (`.codex-pair/design-<label>.md`)
@@ -186,7 +161,8 @@ state; you still decide whether the session continues.
 ```
 
 **Commands:**
-- `/pair start [label]` -- pin a new long-lived Codex thread
+- `/pair start [--harness grok|claude|codex] [label]` --
+  pin a navigator session
 - `/pair design <topic>` -- iterate on a design with the
   partner until both sides agree; the result is written to
   `.codex-pair/` and hash-pinned

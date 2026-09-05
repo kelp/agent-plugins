@@ -18,6 +18,7 @@ test("parseCliArgs applies defaults for start", () => {
   const opts = parseCliArgs(["start"]);
   assert.equal(opts.command, "start");
   assert.equal(opts.label, "default");
+  assert.equal(opts.harness, "codex");
   assert.equal(opts.sandbox, "read-only");
   assert.equal(opts.model, null);
   assert.equal(opts.cwd, null);
@@ -26,11 +27,12 @@ test("parseCliArgs applies defaults for start", () => {
 
 test("parseCliArgs reads flags", () => {
   const opts = parseCliArgs([
-    "start", "--label", "auth", "--cwd", "/repo",
+    "start", "--label", "auth", "--harness", "grok", "--cwd", "/repo",
     "--model", "gpt-5.5-codex", "--sandbox", "workspace-write",
     "--timeout-sec", "120"
   ]);
   assert.equal(opts.label, "auth");
+  assert.equal(opts.harness, "grok");
   assert.equal(opts.cwd, "/repo");
   assert.equal(opts.model, "gpt-5.5-codex");
   assert.equal(opts.sandbox, "workspace-write");

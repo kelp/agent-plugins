@@ -1,30 +1,32 @@
 ---
 name: pair
 description: >
-  Pair program with a persistent Codex partner (model
-  set by your Codex install; --model overrides per pair).
-  One pinned Codex thread holds the whole conversation, so
-  the partner keeps full context across the session. Use
-  when the user wants to pair with Codex, get iterative
-  review from Codex, iterate on a design to consensus,
-  or says "/pair", "pair with codex", "ask my pair
-  partner". Subcommands: start, design, review, judge,
-  resume, status, end, or a freeform message. A Fable
-  judge breaks deadlocks.
+  Pair program with a persistent navigator on Codex, Grok,
+  or Claude. The current session drives (edits, tests); the
+  named harness navigates in a read-only warm session. Use
+  when the user wants to pair, get iterative review from
+  another harness, or says "/pair", "pair with grok",
+  "pair with codex". Subcommands: start, design, review,
+  judge, resume, status, end, or a freeform message. A
+  Fable judge breaks deadlocks when Claude is the driver.
 user-invocable: true
-argument-hint: "start [label] | design <topic> | <message> | review | judge | resume [label] | status | end [label]"
+argument-hint: "start [--harness grok|claude|codex] [label] | design <topic> | review | judge | end"
 ---
 
 # /pair
 
-Pair programming with a persistent Codex partner. Claude
-drives: edits files, runs tests. Codex navigates: reviews,
-critiques, suggests, in a read-only sandbox, with full
-memory of the session.
+Pair programming with a persistent navigator. The current
+session drives: edits files, runs tests. The named harness
+(Codex, Grok, or Claude) navigates: reviews, critiques,
+suggests, in a read-only session, with full memory.
+
+You cannot pair with yourself. If the user names the
+current harness, refuse and ask for a different one.
+Default navigator is Codex.
 
 ## The wrapper
 
-All Codex traffic goes through:
+All partner traffic goes through:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" <cmd> [flags]
@@ -94,9 +96,16 @@ anything else is a freeform message to the partner.
 
 ### start [label]
 
-Label defaults to `default`. One pair per label; labels
-use letters, digits, dot, dash, underscore (feature
-names like `auth-retry` work well).
+Label defaults to `default`. Harness defaults to `codex`.
+Pass `--harness grok` or `--harness claude` to pick the
+navigator. One pair per label; labels use letters, digits,
+dot, dash, underscore (feature names like `auth-retry`
+work well).
+
+Grok and Claude (and Codex when the pool is available)
+use a warm process: first start pays boot, later sends
+are turns. Codex falls back to `codex exec resume` if the
+app-server pool is down.
 
 1. Gather context: repo root, current branch, and what
    the user wants to work on (from the conversation; ask
@@ -105,16 +114,17 @@ names like `auth-retry` work well).
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" start \
-  --label <label> --cwd "<repo-root>" < "<brief-file>"
+  --label <label> --harness <codex|grok|claude> \
+  --cwd "<repo-root>" < "<brief-file>"
 ```
 
 The brief:
 
 ```
 You are the navigator in a pair programming session.
-Your partner (Claude) drives: it edits files and runs
-tests, then shows you its work. You review, critique,
-and suggest. You have read-only access to the repository
+Your partner (the driver) edits files and runs tests,
+then shows you its work. You review, critique, and
+suggest. You have read-only access to the repository
 at your working directory; read any file you need.
 
 Ground rules:
@@ -319,9 +329,10 @@ on disk and `codex resume <threadId>` reopens it.
 
 ## Protocol rules
 
-- **One pen.** Claude edits; Codex reads. Do not ask the
-  partner to modify files. If the user wants Codex to
-  drive, that is a different tool (`codex` directly).
+- **One pen.** The driver edits; the navigator reads.
+  Do not ask the partner to modify files. If the user
+  wants the other harness to drive, they should start
+  a session there.
 - **Diffs, not prose.** Reviews exchange `git diff`
   output. Never send a summary of what you changed in
   place of the change.

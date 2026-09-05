@@ -17,12 +17,14 @@ export const VERDICTS = new Set(["claude", "codex", "split", "unresolved"]);
 // codex 0.145 rejects danger-full-access only behind an extra flag;
 // a pair partner never needs it, so we refuse it outright.
 const SANDBOXES = new Set(["read-only", "workspace-write"]);
+const HARNESSES = new Set(["claude", "codex", "grok"]);
+const TRANSPORTS = new Set(["pool", "exec"]);
 
 export function parseCliArgs(argv) {
   if (argv.length === 0) {
     throw new Error(
       "usage: codex-pair.mjs <start|send|list|end> [--label L] " +
-        "[--cwd D] [--model M] [--sandbox S] [--timeout-sec N]"
+        "[--harness H] [--cwd D] [--model M] [--sandbox S] [--timeout-sec N]"
     );
   }
   const [command, ...rest] = argv;
@@ -32,9 +34,11 @@ export function parseCliArgs(argv) {
   const opts = {
     command,
     label: "default",
+    harness: "codex",
     cwd: null,
     model: null,
     sandbox: "read-only",
+    transport: null,
     timeoutSec: 600,
     kind: null,
     cycleId: null,
@@ -44,7 +48,8 @@ export function parseCliArgs(argv) {
     verdict: null
   };
   const known = new Set([
-    "--label", "--cwd", "--model", "--sandbox", "--timeout-sec",
+    "--label", "--harness", "--cwd", "--model", "--sandbox",
+    "--timeout-sec", "--transport",
     "--kind", "--cycle-id", "--snapshot-id", "--path", "--outcome",
     "--verdict"
   ]);
@@ -65,6 +70,20 @@ export function parseCliArgs(argv) {
           );
         }
         opts.label = value;
+        break;
+      case "--harness":
+        if (!HARNESSES.has(value)) {
+          throw new Error(
+            `harness must be one of: ${[...HARNESSES].join(", ")}`
+          );
+        }
+        opts.harness = value;
+        break;
+      case "--transport":
+        if (!TRANSPORTS.has(value)) {
+          throw new Error("transport must be pool or exec");
+        }
+        opts.transport = value;
         break;
       case "--cwd":
         opts.cwd = value;

@@ -32,6 +32,7 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
+import { requestHarnessBroker } from "./find-harness.mjs";
 import {
   parseCliArgs,
   parseEvents,
@@ -284,6 +285,18 @@ function runCodex(args, { cwd, prompt, timeoutSec }) {
 
 function output(value) {
   process.stdout.write(JSON.stringify(value, null, 2) + "\n");
+}
+
+function wantPool(opts, harness = opts.harness) {
+  if (opts.transport === "exec") return false;
+  if (opts.transport === "pool") return true;
+  if (process.env.HARNESS_PAIR_TRANSPORT === "exec") return false;
+  if (harness && harness !== "codex") return true;
+  return true;
+}
+
+async function runPooled(cwd, method, params) {
+  return requestHarnessBroker(cwd, method, params);
 }
 
 // Snapshot: deterministic worktree-vs-HEAD capture per the v0.3
@@ -716,12 +729,31 @@ async function main() {
       );
     }
     const cwd = opts.cwd ?? process.cwd();
-    const stdout = await runCodex(buildStartArgs(opts), {
-      cwd,
-      prompt,
-      timeoutSec: opts.timeoutSec
-    });
-    const events = parseEvents(stdout);
+    let events;
+    if (wantPool(opts)) {
+      try {
+        const pooled = await runPooled(cwd, "pair/start", {
+          harness: opts.harness,
+          label: opts.label,
+          prompt
+        });
+        events = {
+          threadId: pooled.sessionId,
+          lastMessage: pooled.lastMessage,
+          errors: []
+        };
+      } catch (err) {
+        if (opts.harness !== "codex" || opts.transport === "pool") throw err;
+      }
+    }
+    if (!events) {
+      const stdout = await runCodex(buildStartArgs(opts), {
+        cwd,
+        prompt,
+        timeoutSec: opts.timeoutSec
+      });
+      events = parseEvents(stdout);
+    }
     if (!events.threadId) {
       throw new Error(
         `codex returned no thread id; errors: ${events.errors.join("; ")}`
@@ -737,6 +769,7 @@ async function main() {
       }
       return upsertPair(s, {
         label: opts.label,
+        harness: opts.harness,
         threadId: events.threadId,
         cwd,
         model: opts.model,
@@ -801,12 +834,30 @@ async function main() {
   let events;
   let packet;
   try {
-    const stdout = await runCodex(buildSendArgs(pair.threadId, opts), {
-      cwd: pair.cwd,
-      prompt,
-      timeoutSec: opts.timeoutSec
-    });
-    events = parseEvents(stdout);
+    const harness = pair.harness ?? "codex";
+    if (wantPool(opts, harness)) {
+      try {
+        const pooled = await runPooled(pair.cwd, "pair/send", {
+          label: pair.label,
+          prompt
+        });
+        events = {
+          threadId: pooled.sessionId ?? pair.threadId,
+          lastMessage: pooled.lastMessage,
+          errors: []
+        };
+      } catch (err) {
+        if (harness !== "codex" || opts.transport === "pool") throw err;
+      }
+    }
+    if (!events) {
+      const stdout = await runCodex(buildSendArgs(pair.threadId, opts), {
+        cwd: pair.cwd,
+        prompt,
+        timeoutSec: opts.timeoutSec
+      });
+      events = parseEvents(stdout);
+    }
     await mutateState((s) => {
       let next = applySendUpdate(
         s, pair.label, pair.threadId, new Date().toISOString()

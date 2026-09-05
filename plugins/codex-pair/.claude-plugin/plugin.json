@@ -1,7 +1,7 @@
 {
   "name": "codex-pair",
-  "description": "Pair programming with a persistent Codex partner. Claude drives and edits files while Codex navigates and reviews in a read-only sandbox, all through one long-lived thread that survives restarts. The GPT side is set by your codex install; override per pair with the wrapper's --model flag. A Fable judge rules on deadlocks when the two sides stop converging.",
-  "version": "0.4.0",
+  "description": "Pair programming with a persistent navigator on Codex, Grok, or Claude. The current session drives; the named harness navigates in a read-only warm session. Default navigator is Codex. A Fable judge rules on deadlocks when Claude is the driver.",
+  "version": "0.5.0",
   "author": {
     "name": "Travis Cole"
   },

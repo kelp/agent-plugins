@@ -92,6 +92,7 @@ before(() => {
   env = {
     ...process.env,
     PATH: `${dir}:${process.env.PATH}`,
+    HARNESS_PAIR_TRANSPORT: "exec",
     CODEX_PAIR_STATE_FILE: stateFile,
     FAKE_COUNT: path.join(dir, "count.txt")
   };
