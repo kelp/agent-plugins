@@ -1,5 +1,14 @@
 # Cross-Review Plugin Design
 
+Superseded. Current behavior is native reviewers
+(Claude `/code-review`, Codex `review/start`, Grok
+`/review`) via a warm process pool. See
+`plugins/cross-review/skills/cross-review/SKILL.md`.
+
+---
+
+# Cross-Review Plugin Design (2026-04-06)
+
 ## Problem
 
 A single model's code review misses findings that a

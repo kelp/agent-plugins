@@ -171,9 +171,9 @@ state; you still decide whether the session continues.
   partner until both sides agree; the result is written to
   `.pair/` and hash-pinned
 - `/pair <message>` -- send a message to the pinned thread
-- `/pair review` -- ask Codex to review in a read-only sandbox
+- `/pair review` -- ask the navigator to review a snapshot
 - `/pair judge` -- have a Fable judge rule on a deadlock
-  between Claude and the partner
+  (Claude as driver only)
 - `/pair resume [label]` -- reattach to a pinned thread after
   a restart
 - `/pair status` -- show the active thread and its state
@@ -184,10 +184,13 @@ The skill drives these through internal wrapper subcommands
 review-complete, override-cap, judge, snapshot).
 
 **Requirements:**
-- [Codex CLI](https://github.com/openai/codex) >= 0.145,
-  authenticated
+- The navigator CLI on PATH: `codex`, `grok`, and/or
+  `claude`
 - Node.js on `PATH`
-- macOS or Linux (the wrapper uses POSIX process groups)
+- macOS or Linux (the exec fallback uses POSIX process
+  groups)
+- For Codex as navigator, [Codex CLI](https://github.com/openai/codex)
+  >= 0.145, authenticated
 
 ### knowledge-forge
 
@@ -279,8 +282,8 @@ CLAUDE.md connects these plugins:
 1. `zig-claude-kit` appends Zig 0.15.x corrections
 2. `tiger-style` appends Tiger Style guidance
 3. `tdd-pipeline` reads test commands and file patterns
-4. `cross-review` reads the codex script path and
-   optional review focus
+4. `cross-review` and `pair` call the `claude`, `codex`,
+   and `grok` CLIs on PATH through a warm process pool
 5. `knowledge-forge` reads the `knowledge-base:` path
    from the active project CLAUDE.md
 6. `next-todo` reads the Next TODO binding (backlog,

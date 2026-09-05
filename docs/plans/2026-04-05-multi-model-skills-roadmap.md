@@ -29,6 +29,12 @@ Key findings that inform this roadmap:
   (cloudcode-pa.googleapis.com). Both SDKs are API-key
   / pay-per-token only.
 
+Status as of 2026-09: `cross-review` ships native
+reviews from Claude, Codex, and Grok. `pair` is a
+persistent navigator on any of those three. Neither
+uses the Codex companion `task` path. Items below are
+the original roadmap.
+
 ## Plugins to Build
 
 ### 1. adversarial-review (skill + CLAUDE.md guidance)

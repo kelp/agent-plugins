@@ -36,7 +36,7 @@ Commands: `start`, `send`, `list`, `end`,
 `design-register`, `design-agree`, `design-amend`,
 `review-start`, `review-complete`, `override-cap`,
 `judge`, `snapshot`. macOS and Linux only: the wrapper relies on
-POSIX process groups to terminate the codex tree and
+POSIX process groups to terminate the partner tree and
 fails fast elsewhere. `start` and `send` read the prompt
 from stdin; `send` requires
 `--kind design|review|freeform` (freeform is uncounted).
@@ -78,8 +78,8 @@ questions) can stay foreground.
 **One operation per label, enforced.** The wrapper
 claims an in-flight token per label; a second `send` or
 `end` on the same label fails fast with "in flight"
-instead of interleaving appends into one Codex rollout
-file. Tokens expire after the operation's timeout plus
+instead of interleaving appends into one partner
+history. Tokens expire after the operation's timeout plus
 grace, so a crashed command never wedges the label. If
 you hit the in-flight error, wait and retry; do not
 delete state to get around it. Use one label per Claude
@@ -269,8 +269,8 @@ Steps:
 
 ```
 You are the judge in a pair-programming disagreement.
-Claude drives, Codex navigates; they have not converged.
-You have no stake in either position.
+The driver edits; the navigator reviews. They have not
+converged. You have no stake in either position.
 
 Rule on the contested points below. Read the actual code
 before ruling on any claim about it; a position that
@@ -311,7 +311,7 @@ judge to break a tie you have not actually reached.
 
 ### resume [label]
 
-After a Claude restart. Run `list`, find the pair, then
+After a driver restart. Run `list`, find the pair, then
 `send` a short "resuming: here is where we are" message
 with the current branch and diff state. Relay the reply.
 If the label is missing, show what `list` returned.
@@ -325,8 +325,9 @@ any `capState`, any cap overrides, and any judge rulings
 
 ### end [label]
 
-Run `end`. Tell the user the Codex thread itself remains
-on disk and `codex resume <threadId>` reopens it.
+Run `end`. For a Codex navigator, the thread remains on
+disk and `codex resume <threadId>` reopens it. Grok and
+Claude sessions stay in that harness's own store.
 
 ## Protocol rules
 

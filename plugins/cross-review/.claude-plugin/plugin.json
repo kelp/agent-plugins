@@ -1,7 +1,7 @@
 {
   "name": "cross-review",
   "description": "Native code review from Claude, Codex, and/or Grok. Call one harness or any set. Each callee uses its own reviewer. A warm process pool reuses app-server / grok agent / claude -p across reviews.",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "author": {
     "name": "Travis Cole"
   },

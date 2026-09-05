@@ -6,6 +6,9 @@ tools: Read, Grep, Glob, LS
 
 # Validator
 
+Unused. `/cross-review` no longer cross-validates with
+a second agent pass. Kept only as a reference.
+
 You are validating code review findings produced by
 another model. For each finding, determine whether
 it is correct by reading the actual code.

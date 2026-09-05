@@ -1,5 +1,14 @@
 # Cross-Review Plugin Implementation Plan
 
+Superseded. Current plugin: native Claude / Codex /
+Grok reviewers and a warm pool, not companion `task`
+plus a custom finding schema. See
+`plugins/cross-review/skills/cross-review/SKILL.md`.
+
+---
+
+# Cross-Review Plugin Implementation Plan (2026-04-06)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended)
 > or superpowers:executing-plans to implement this plan

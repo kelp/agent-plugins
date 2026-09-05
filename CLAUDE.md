@@ -145,8 +145,12 @@ Each of these caused a real bug; none is guessable:
 CLAUDE.md is the integration point between plugins.
 Language plugins (zig-claude-kit) append corrections.
 Process plugins (tdd-pipeline, next-todo) read test
-commands, file patterns, and bindings. No code-level
-coupling between plugins.
+commands, file patterns, and bindings.
+
+`pair` locates the cross-review harness broker at
+runtime (sibling plugin, cache, or
+`HARNESS_LIFECYCLE`). That is the one code-level
+coupling. Do not add more.
 
 ## Heads-up: edit here, not the installed copies
 
