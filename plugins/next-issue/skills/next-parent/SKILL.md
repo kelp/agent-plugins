@@ -63,10 +63,12 @@ from `origin/main`" steps for this session only:
 4. In the PR body, name predecessor PRs in this stack
    and the slice-only range as two SHAs
    (`<prev-tip>..<slice-tip>`), not a symbolic `HEAD`.
-   Update that range before every push of the slice,
-   including a patch-review or drain fix pushed by
-   `next-issue`. The PR body is the recovery record.
-   Stop and report if the body has no range.
+   The first push creates the branch before the draft
+   PR exists; write the range into the body when the PR
+   opens. Update that range before every later push of
+   the slice, including a patch-review or drain fix
+   pushed by `next-issue`. The PR body is the recovery
+   record. Stop and report if an open PR has no range.
 5. Patch review (`next-issue` §4b) reviews the
    slice-only range `<prev-tip>..HEAD` against this
    slice's plan, not `origin/main...HEAD`. Gates still
