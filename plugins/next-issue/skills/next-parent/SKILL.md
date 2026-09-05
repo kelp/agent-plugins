@@ -62,10 +62,10 @@ from `origin/main`" steps for this session only:
    has an open PR against `main`.
 4. In the PR body, name predecessor PRs in this stack
    and the slice-only range (`<prev-tip>..HEAD`). Update
-   that range after every rebase of the slice. The PR
-   body is the recovery record: on Resume, the range
-   gives `<old-prev-tip>`. Stop and report if the body
-   has no range.
+   that range before every force push of the slice. The
+   PR body is the recovery record: on Resume, the range
+   gives `<recorded-prev-tip>`. Stop and report if the
+   body has no range.
 5. Patch review (`next-issue` §4b) reviews the
    slice-only range `<prev-tip>..HEAD` against this
    slice's plan, not `origin/main...HEAD`. Gates still
@@ -130,16 +130,16 @@ that already has an open PR:
 
 1. Evaluate blockers. If one holds, stop and report.
 2. If an open PR against `main` already claims this
-   sub-issue, record its URL and tip SHA. Check that the
-   tip contains the previous slice's current tip
-   (`git merge-base --is-ancestor <prev-tip> <tip>`). If
-   it does not, take `<old-prev-tip>` from the range in
-   the PR body, rebase that range onto the current
-   `<prev-tip>`, run **Gates**, push with
-   `--force-with-lease`, and update the range in the PR
-   body. Stop and report if that rebase conflicts. Then
-   continue to the next sub-issue from that tip. Do not
-   open a second PR.
+   sub-issue, record its URL and tip SHA. Read
+   `<recorded-prev-tip>` from the range in the PR body
+   and compare it with the previous slice's current tip.
+   An ancestry test is not enough: a rewound predecessor
+   still passes it. If the two differ, rebase
+   `<recorded-prev-tip>..HEAD` onto the current tip, run
+   **Gates**, update the range in the PR body, then push
+   with `--force-with-lease`. Stop and report if that
+   rebase conflicts. Then continue to the next sub-issue
+   from that tip. Do not open a second PR.
 3. Load `next-issue`. Pass the sub-issue number, that
    this is one slice in a `/next-parent` session, and
    the overlay above. Do not tell it to pick from
@@ -151,9 +151,9 @@ that already has an open PR:
    later slices in order, each onto the new tip of its
    immediate predecessor
    (`git rebase --onto <new-prev-tip> <old-prev-tip>`),
-   run **Gates** on each, and push each with
-   `--force-with-lease` before you continue. Record the
-   new tips. Stop on a conflict or a failed gate.
+   run **Gates** on each, update each PR body range, and
+   push each with `--force-with-lease` before you
+   continue. Stop on a conflict or a failed gate.
 6. Record the PR URL and the slice tip SHA, then run
    `next-issue` for the next sub-issue.
 
@@ -175,9 +175,9 @@ its comment drain (§5 of that skill) on that PR.
 After a drain push to slice k, rebase the later slices
 in order, each onto the new tip of its immediate
 predecessor (`git rebase --onto <new-prev-tip>
-<old-prev-tip>`), run **Gates** on each, and push each
-with `--force-with-lease`. Record the new tips. Stop on
-a conflict or a failed gate.
+<old-prev-tip>`), run **Gates** on each, update each PR
+body range, and push each with `--force-with-lease`.
+Stop on a conflict or a failed gate.
 
 Stop when the `next-issue` all-clear holds on every
 open PR in this parent. Report the URLs. Do not merge
