@@ -156,7 +156,9 @@ When a review event arrives, or when the user runs
 ## 3. Drain through next-issue
 
 Pick the parent the same way as §1. For each open PR in
-that parent, in listed order, load `next-issue` and run
+that parent, in listed order, first run the ancestry
+check from §2 step 2, so a stale slice is rebased before
+its comments are read. Then load `next-issue` and run
 its comment drain (§5 of that skill) on that PR.
 
 After a drain push to slice k, rebase later branches
