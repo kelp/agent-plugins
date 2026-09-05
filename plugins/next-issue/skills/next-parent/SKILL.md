@@ -141,10 +141,13 @@ that already has an open PR:
 4. Let it plan, review, implement, and open a **draft**
    PR against `main`.
 5. Do not wait for human review before the next
-   sub-issue. If you push a fix to slice k, rebase each
-   later section branch onto that HEAD, run **Gates** on
-   it, and push it with `--force-with-lease` before you
-   continue. Stop on a conflict or a failed gate.
+   sub-issue. If you push a fix to slice k, rebase the
+   later slices in order, each onto the new tip of its
+   immediate predecessor
+   (`git rebase --onto <new-prev-tip> <old-prev-tip>`),
+   run **Gates** on each, and push each with
+   `--force-with-lease` before you continue. Record the
+   new tips. Stop on a conflict or a failed gate.
 6. Record the PR URL and the slice tip SHA, then run
    `next-issue` for the next sub-issue.
 
@@ -163,10 +166,12 @@ check from §2 step 2, so a stale slice is rebased before
 its comments are read. Then load `next-issue` and run
 its comment drain (§5 of that skill) on that PR.
 
-After a drain push to slice k, rebase each later branch
-onto that HEAD, run **Gates** on it, and push it with
-`--force-with-lease`. Stop on a conflict or a failed
-gate.
+After a drain push to slice k, rebase the later slices
+in order, each onto the new tip of its immediate
+predecessor (`git rebase --onto <new-prev-tip>
+<old-prev-tip>`), run **Gates** on each, and push each
+with `--force-with-lease`. Record the new tips. Stop on
+a conflict or a failed gate.
 
 Stop when the `next-issue` all-clear holds on every
 open PR in this parent. Report the URLs. Do not merge
