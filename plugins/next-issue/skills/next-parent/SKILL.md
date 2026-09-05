@@ -61,7 +61,11 @@ from `origin/main`" steps for this session only:
 3. Do not open a second PR for a sub-issue that already
    has an open PR against `main`.
 4. In the PR body, name predecessor PRs in this stack
-   and the slice-only range (`<prev-tip>..HEAD`).
+   and the slice-only range (`<prev-tip>..HEAD`). Update
+   that range after every rebase of the slice. The PR
+   body is the recovery record: on Resume, the range
+   gives `<old-prev-tip>`. Stop and report if the body
+   has no range.
 5. Patch review (`next-issue` §4b) reviews the
    slice-only range `<prev-tip>..HEAD` against this
    slice's plan, not `origin/main...HEAD`. Gates still
@@ -129,11 +133,13 @@ that already has an open PR:
    sub-issue, record its URL and tip SHA. Check that the
    tip contains the previous slice's current tip
    (`git merge-base --is-ancestor <prev-tip> <tip>`). If
-   it does not, rebase this slice's range onto
-   `<prev-tip>`, run **Gates**, and push with
-   `--force-with-lease`. Stop and report if that rebase
-   conflicts. Then continue to the next sub-issue from
-   that tip. Do not open a second PR.
+   it does not, take `<old-prev-tip>` from the range in
+   the PR body, rebase that range onto the current
+   `<prev-tip>`, run **Gates**, push with
+   `--force-with-lease`, and update the range in the PR
+   body. Stop and report if that rebase conflicts. Then
+   continue to the next sub-issue from that tip. Do not
+   open a second PR.
 3. Load `next-issue`. Pass the sub-issue number, that
    this is one slice in a `/next-parent` session, and
    the overlay above. Do not tell it to pick from
