@@ -62,7 +62,12 @@ from `origin/main`" steps for this session only:
    has an open PR against `main`.
 4. In the PR body, name predecessor PRs in this stack
    and the slice-only range (`<prev-tip>..HEAD`).
-5. Do not merge. Do not enqueue on the merge queue
+5. Patch review (`next-issue` §4b) reviews the
+   slice-only range `<prev-tip>..HEAD` against this
+   slice's plan, not `origin/main...HEAD`. Gates still
+   run on the whole branch. The same range applies when
+   a drain fix triggers patch review again.
+6. Do not merge. Do not enqueue on the merge queue
    unless the user asks.
 
 ## 1. Choose the parent
@@ -121,9 +126,14 @@ that already has an open PR:
 
 1. Evaluate blockers. If one holds, stop and report.
 2. If an open PR against `main` already claims this
-   sub-issue, record its URL and tip SHA. Continue to
-   the next sub-issue from that tip. Do not open a
-   second PR.
+   sub-issue, record its URL and tip SHA. Check that the
+   tip contains the previous slice's current tip
+   (`git merge-base --is-ancestor <prev-tip> <tip>`). If
+   it does not, rebase this slice's range onto
+   `<prev-tip>`, run **Gates**, and push with
+   `--force-with-lease`. Stop and report if that rebase
+   conflicts. Then continue to the next sub-issue from
+   that tip. Do not open a second PR.
 3. Load `next-issue`. Pass the sub-issue number, that
    this is one slice in a `/next-parent` session, and
    the overlay above. Do not tell it to pick from
