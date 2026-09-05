@@ -24,7 +24,7 @@
     {
       "name": "tdd-pipeline",
       "source": "./plugins/tdd-pipeline",
-      "description": "Language-agnostic TDD pipeline with test-first agents, review loops, and verify gates. Agents inherit the session model, or pin one per run with --model.",
+      "description": "Language-agnostic, harness-agnostic TDD pipeline with test-first agents, review loops, and verify gates. Role agents default to Opus; pin another model per run with --model.",
       "strict": false
     },
     {

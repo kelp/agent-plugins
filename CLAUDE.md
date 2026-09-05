@@ -13,10 +13,10 @@ A Claude Code plugin marketplace containing these plugins:
 - **tiger-style** -- TigerBeetle's Tiger Style methodology
   for Zig (assertions, bounded loops, static memory,
   snake_case naming, 70-line / 100-col limits)
-- **tdd-pipeline** -- language-agnostic TDD pipeline:
-  four agent roles across a seven-stage pipeline (the
-  red/verify/integrate gates run in the orchestrator,
-  not as separate agents)
+- **tdd-pipeline** -- language- and harness-agnostic
+  TDD pipeline: four agent roles across a seven-stage
+  pipeline (the red/verify/integrate gates run in the
+  orchestrator, not as separate agents)
 - **cross-review** -- native reviews from Claude, Codex,
   and/or Grok (any set), via a warm process pool
 - **pair** -- pair with a persistent Codex, Grok, or

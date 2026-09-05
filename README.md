@@ -79,8 +79,8 @@ Zig project until then.
 
 ### tdd-pipeline
 
-Claude skips tests, writes stubs, and reviews its own
-work. This plugin stops that. It splits every module
+Coding agents skip tests, write stubs, and review their
+own work. This plugin stops that. It splits every module
 into seven stages across separate agents -- no single
 agent both writes and reviews code.
 
@@ -89,10 +89,12 @@ agent both writes and reviews code.
 ```
 
 Run `/tdd-init` to configure your project, then
-`/tdd-orchestrate parser` to build a module. Agents
-inherit your session model; pass `--model <name>` (e.g.
-`/tdd-orchestrate --model opus parser`) to pin one for
-the run.
+`/tdd-orchestrate parser` to build a module. Role
+agents default to Opus; pass `--model <name>` (e.g.
+`/tdd-orchestrate --model opus parser`) to pin another
+model for the run. The skill text is harness-agnostic:
+Claude Code dispatch is the worked example, and the
+skill names the equivalent step for other harnesses.
 
 **The pipeline:**
 

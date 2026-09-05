@@ -1,7 +1,7 @@
 ---
 name: test-reviewer
 description: Test-review role for the tdd-pipeline plugin. Reads tests written by the test-writer agent, checks coverage and correctness, and reports findings. Does not write code. Dispatched by tdd-orchestrate; not for direct user invocation.
-tools: Read, Grep, Glob, LS
+tools: Read, Grep, Glob
 model: opus
 ---
 
@@ -56,7 +56,8 @@ do NOT write code. You report findings.
 
 ### Language-Specific
 - Check for language-specific issues described in
-  the project's CLAUDE.md
+  the project's instructions file (`CLAUDE.md`, or
+  `AGENTS.md` when the TDD configuration lives there)
 - Verify correct API usage for the language version
 
 ## Output Format

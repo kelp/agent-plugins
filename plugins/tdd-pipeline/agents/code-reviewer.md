@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Implementation-review role for the tdd-pipeline plugin. Reads code written by the implementer agent, checks correctness, resource management, and quality, and reports findings. Does not write code. Dispatched by tdd-orchestrate; not for direct user invocation.
-tools: Read, Grep, Glob, LS
+tools: Read, Grep, Glob
 model: opus
 ---
 
@@ -36,7 +36,7 @@ agent. You do NOT write code. You report findings.
 - Idiomatic patterns for the language
 - No unnecessary complexity
 - No dead code or unused imports
-- Public API matches the type spec from the plan
+- Public API matches the type signatures in the brief
 
 ### Dependencies
 - Only imports declared dependencies
@@ -56,7 +56,8 @@ agent. You do NOT write code. You report findings.
 
 ### Language-Specific
 - Check for language-specific issues described in
-  the project's CLAUDE.md
+  the project's instructions file (`CLAUDE.md`, or
+  `AGENTS.md` when the TDD configuration lives there)
 - Verify correct API usage for the language version
 
 ## Output Format
