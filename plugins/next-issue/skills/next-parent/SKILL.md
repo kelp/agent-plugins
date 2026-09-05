@@ -80,10 +80,11 @@ from `origin/main`" steps for this session only:
      number. If zero names match or several match, stop
      and report. Do not guess.
 3. Open that parent. Stop if it carries `blocked`.
-4. List remaining open sub-issues of that parent, in
-   Children order, that carry `ready` or `in-progress`.
-   Stop if the list is empty and no open PRs remain for
-   this parent.
+4. List every remaining open sub-issue of that parent,
+   in Children order. Keep a `blocked` sub-issue in the
+   list; §2 evaluates it in turn and stops there. Do not
+   filter the list by label. Stop if the list is empty
+   and no open PRs remain for this parent.
 5. List open PRs against `main` that claim those
    sub-issues.
 
@@ -100,9 +101,10 @@ Then pick a mode:
 
 ## Blockers
 
-Before each remaining sub-issue H, stop and report if
-any of these hold. Do not skip H. Do not start later
-sub-issues.
+Before each remaining sub-issue H, in list order, stop
+and report if any of these hold. Do not skip H. Do not
+start later sub-issues. A parent ordered A (`ready`),
+B (`blocked`), C (`ready`) lands A, then stops at B.
 
 - H or the parent carries `blocked`.
 - A Depends-on clause names a predecessor that is not
