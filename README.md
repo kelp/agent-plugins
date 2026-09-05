@@ -8,7 +8,7 @@ Claude Code plugins by kelp:
 - **tdd-pipeline** -- enforces TDD across separate agents
 - **cross-review** -- native reviews from Claude, Codex,
   and/or Grok
-- **codex-pair** -- pairs with Codex, Grok, or Claude
+- **pair** -- pairs with Codex, Grok, or Claude
 - **knowledge-forge** -- captures notes and routes
   retrieval for a personal knowledge base
 - **fleet-efficiency** -- runs agent fleets: token rules
@@ -133,7 +133,7 @@ pool so the second call in a repo skips cold start.
 CLIs on PATH for the callees you want. Missing binaries
 are skipped. Node.js is required for the pool CLI.
 
-### codex-pair
+### pair
 
 Pair programming with a persistent navigator on Codex, Grok,
 or Claude. `/pair start --harness grok` pins a warm session;
@@ -141,11 +141,15 @@ later sends are turns, not boots. The current session drives
 (edits, tests). The named harness navigates read-only. Default
 navigator is Codex. You cannot pair with yourself.
 
+Previously `codex-pair`. Uninstall that plugin and install
+`pair@agent-plugins`. Existing `~/.claude/codex-pair/` state
+and `.codex-pair/` design files are still read.
+
 This complements cross-review: cross-review is a one-shot
 native review; pair is a continuous partner.
 
 Since v0.3.0 the workflow is first-class: an agreed design
-artifact lives in the repo (`.codex-pair/design-<label>.md`)
+artifact lives in the repo (`.pair/design-<label>.md`)
 and reviews are gated on it; design and review round caps
 are enforced mechanically, with user overrides recorded in
 state; and a deterministic snapshot command captures
@@ -157,7 +161,7 @@ says who is right. The ruling is advisory and recorded in
 state; you still decide whether the session continues.
 
 ```bash
-/plugin install codex-pair@agent-plugins
+/plugin install pair@agent-plugins
 ```
 
 **Commands:**
@@ -165,7 +169,7 @@ state; you still decide whether the session continues.
   pin a navigator session
 - `/pair design <topic>` -- iterate on a design with the
   partner until both sides agree; the result is written to
-  `.codex-pair/` and hash-pinned
+  `.pair/` and hash-pinned
 - `/pair <message>` -- send a message to the pinned thread
 - `/pair review` -- ask Codex to review in a read-only sandbox
 - `/pair judge` -- have a Fable judge rule on a deadlock

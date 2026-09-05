@@ -29,7 +29,7 @@ Default navigator is Codex.
 All partner traffic goes through:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" <cmd> [flags]
+node "${CLAUDE_PLUGIN_ROOT}/scripts/pair.mjs" <cmd> [flags]
 ```
 
 Commands: `start`, `send`, `list`, `end`,
@@ -41,8 +41,9 @@ fails fast elsewhere. `start` and `send` read the prompt
 from stdin; `send` requires
 `--kind design|review|freeform` (freeform is uncounted).
 Both print JSON with `threadId`, `lastMessage`, and
-`errors`. State lives in `~/.claude/codex-pair/pairs.json`
-(schema v2; v1 files migrate automatically).
+`errors`. State lives in `~/.claude/pair/pairs.json`
+(schema v2; v1 files migrate automatically). An existing
+`~/.claude/codex-pair/pairs.json` is still read.
 
 Always pass prompts via stdin from a temp file, never as
 a shell-interpolated argument and never as a heredoc:
@@ -52,7 +53,7 @@ which would truncate the prompt and feed the remainder to
 the shell. Write the prompt with the Write tool, then:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" send \
+node "${CLAUDE_PLUGIN_ROOT}/scripts/pair.mjs" send \
   --label <label> --kind <design|review|freeform> \
   < "<prompt-file>"
 ```
@@ -113,7 +114,7 @@ app-server pool is down.
 2. Write the opening brief below to a temp file, then:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" start \
+node "${CLAUDE_PLUGIN_ROOT}/scripts/pair.mjs" start \
   --label <label> --harness <codex|grok|claude> \
   --cwd "<repo-root>" < "<brief-file>"
 ```
@@ -177,7 +178,7 @@ review: both sides may propose, both must agree.
    not. Do not converge by politeness.
 4. On consensus (partner says AGREE and you agree):
    write the agreed design to
-   `.codex-pair/design-<label>.md` in the repo, then run
+   `.pair/design-<label>.md` in the repo, then run
    `design-register --label <label> --path <that file>`
    and `design-agree --label <label>`. Never `git add`
    or commit it yourself; committing is the user's call.
@@ -290,7 +291,7 @@ what evidence would.
    permit). Write the ruling to a temp file, then:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-pair.mjs" judge \
+node "${CLAUDE_PLUGIN_ROOT}/scripts/pair.mjs" judge \
   --label <label> --kind <design|review> \
   --verdict <claude|codex|split|unresolved> \
   < "<ruling-file>"

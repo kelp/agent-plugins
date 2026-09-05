@@ -1,4 +1,4 @@
-// Pure logic for the codex-pair CLI. No I/O here; everything in
+// Pure logic for the pair CLI. No I/O here; everything in
 // this module is unit-tested by tests/lib.test.mjs.
 
 import { createHash } from "node:crypto";
@@ -20,10 +20,32 @@ const SANDBOXES = new Set(["read-only", "workspace-write"]);
 const HARNESSES = new Set(["claude", "codex", "grok"]);
 const TRANSPORTS = new Set(["pool", "exec"]);
 
+export function designArtifactPath(label, { legacy = false } = {}) {
+  const dir = legacy ? ".codex-pair" : ".pair";
+  return `${dir}/design-${label}.md`;
+}
+
+export function isDesignArtifactPath(label, given) {
+  return (
+    given === designArtifactPath(label) ||
+    given === designArtifactPath(label, { legacy: true })
+  );
+}
+
+export function resolveStateFile(env, home, exists) {
+  if (env.PAIR_STATE_FILE) return env.PAIR_STATE_FILE;
+  if (env.CODEX_PAIR_STATE_FILE) return env.CODEX_PAIR_STATE_FILE;
+  const neu = `${home}/.claude/pair/pairs.json`;
+  const old = `${home}/.claude/codex-pair/pairs.json`;
+  if (exists(neu)) return neu;
+  if (exists(old)) return old;
+  return neu;
+}
+
 export function parseCliArgs(argv) {
   if (argv.length === 0) {
     throw new Error(
-      "usage: codex-pair.mjs <start|send|list|end> [--label L] " +
+      "usage: pair.mjs <start|send|list|end> [--label L] " +
         "[--harness H] [--cwd D] [--model M] [--sandbox S] [--timeout-sec N]"
     );
   }

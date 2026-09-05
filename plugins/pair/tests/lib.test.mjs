@@ -9,10 +9,49 @@ import {
   applySendUpdate,
   buildStartArgs,
   buildSendArgs,
-  renderEventLine
+  renderEventLine,
+  resolveStateFile,
+  designArtifactPath,
+  isDesignArtifactPath
 } from "../scripts/lib.mjs";
 
 // --- parseCliArgs ---
+
+test("resolveStateFile prefers PAIR_STATE_FILE then the legacy env", () => {
+  assert.equal(
+    resolveStateFile({ PAIR_STATE_FILE: "/n" }, "/h", () => false),
+    "/n"
+  );
+  assert.equal(
+    resolveStateFile({ CODEX_PAIR_STATE_FILE: "/o" }, "/h", () => false),
+    "/o"
+  );
+});
+
+test("resolveStateFile uses ~/.claude/pair unless only the old file exists", () => {
+  assert.equal(
+    resolveStateFile({}, "/h", () => false),
+    "/h/.claude/pair/pairs.json"
+  );
+  assert.equal(
+    resolveStateFile({}, "/h", (p) => p.endsWith("codex-pair/pairs.json")),
+    "/h/.claude/codex-pair/pairs.json"
+  );
+});
+
+test("designArtifactPath is .pair, with .codex-pair still accepted", () => {
+  assert.equal(designArtifactPath("auth"), ".pair/design-auth.md");
+  assert.equal(
+    designArtifactPath("auth", { legacy: true }),
+    ".codex-pair/design-auth.md"
+  );
+  assert.equal(isDesignArtifactPath("auth", ".pair/design-auth.md"), true);
+  assert.equal(
+    isDesignArtifactPath("auth", ".codex-pair/design-auth.md"),
+    true
+  );
+  assert.equal(isDesignArtifactPath("auth", "elsewhere.md"), false);
+});
 
 test("parseCliArgs applies defaults for start", () => {
   const opts = parseCliArgs(["start"]);

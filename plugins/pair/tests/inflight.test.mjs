@@ -14,7 +14,7 @@ import {
 } from "../scripts/lib.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const cli = path.join(here, "..", "scripts", "codex-pair.mjs");
+const cli = path.join(here, "..", "scripts", "pair.mjs");
 
 // --- pure token logic ---
 

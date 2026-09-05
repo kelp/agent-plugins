@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const cli = path.join(here, "..", "scripts", "codex-pair.mjs");
+const cli = path.join(here, "..", "scripts", "pair.mjs");
 
 // codex is a Node launcher that spawns the native binary, so the
 // wrapper must terminate the whole process group on timeout. A

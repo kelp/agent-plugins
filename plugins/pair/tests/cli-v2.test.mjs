@@ -10,7 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const cli = path.join(here, "..", "scripts", "codex-pair.mjs");
+const cli = path.join(here, "..", "scripts", "pair.mjs");
 
 let dir; // state + fake codex
 let repo; // real git repo for snapshot
@@ -77,12 +77,12 @@ test("send requires --kind", () => {
 });
 
 test("design lifecycle over the CLI", () => {
-  mkdirSync(path.join(repo, ".codex-pair"), { recursive: true });
-  const dpath = ".codex-pair/design-p.md";
+  mkdirSync(path.join(repo, ".pair"), { recursive: true });
+  const dpath = ".pair/design-p.md";
   writeFileSync(path.join(repo, dpath), "v1 design\n");
   assert.throws(
     () => run(["design-register", "--label", "p", "--path", "wrong.md"]),
-    /\.codex-pair/
+    /\.pair/
   );
   run(["design-register", "--label", "p", "--path", dpath]);
   let state = JSON.parse(run(["list"]));
@@ -111,7 +111,7 @@ test("design lifecycle over the CLI", () => {
 test("design-register rejects paths outside the repo", () => {
   assert.throws(
     () => run(["design-register", "--label", "p", "--path",
-      "../.codex-pair/design-p.md"]),
+      "../.pair/design-p.md"]),
     /inside|outside|not found|must live at/i
   );
 });
@@ -195,7 +195,7 @@ test("deleting the agreed design file blocks review sends as a path violation", 
   const r2 = (args, input = "") =>
     execFileSync("node", [cli, ...args], { env: e2, input, encoding: "utf8" });
   r2(["start", "--label", "d1", "--cwd", repo], "hi");
-  const dp = ".codex-pair/design-d1.md";
+  const dp = ".pair/design-d1.md";
   writeFileSync(path.join(repo, dp), "design\n");
   r2(["design-register", "--label", "d1", "--path", dp]);
   r2(["design-agree", "--label", "d1"]);
@@ -233,7 +233,7 @@ test("snapshot cleans up its spool directory even on rerun", () => {
   const spoolDir = process.env.TMPDIR ?? tmpdir();
   const count = () =>
     readdirSync(spoolDir)
-      .filter((n) => n.startsWith("codex-pair-snap-")).length;
+      .filter((n) => n.startsWith("pair-snap-")).length;
   const before = count();
   run(["snapshot", "--label", "p"]);
   run(["snapshot", "--label", "p"]);

@@ -34,8 +34,8 @@
       "strict": false
     },
     {
-      "name": "codex-pair",
-      "source": "./plugins/codex-pair",
+      "name": "pair",
+      "source": "./plugins/pair",
       "description": "Pair programming with a persistent navigator on Codex, Grok, or Claude. The current session drives; the named harness navigates in a read-only warm session. Default navigator is Codex.",
       "strict": false
     },

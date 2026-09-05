@@ -19,8 +19,8 @@ A Claude Code plugin marketplace containing these plugins:
   not as separate agents)
 - **cross-review** -- native reviews from Claude, Codex,
   and/or Grok (any set), via a warm process pool
-- **codex-pair** -- pair with a persistent Codex, Grok,
-  or Claude navigator; Fable judge when Claude drives
+- **pair** -- pair with a persistent Codex, Grok, or
+  Claude navigator; Fable judge when Claude drives
 - **knowledge-forge** -- cross-session routing and
   capture for a three-layer personal knowledge base
 - **fleet-efficiency** -- agent-fleet rules and
@@ -65,7 +65,7 @@ plugins/
     scripts/                       # harness pool CLI + broker
     agents/                        # legacy custom-schema roles
     docs/                          # fragment, merge/output ref
-  codex-pair/
+  pair/
     .claude-plugin/plugin.json     # manifest (version here)
     skills/pair/                   # orchestrator skill
     scripts/                       # pair CLI; warm pool via

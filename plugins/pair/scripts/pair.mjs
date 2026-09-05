@@ -1,18 +1,14 @@
 #!/usr/bin/env node
-// codex-pair: manage persistent Codex pairing threads.
+// pair: manage persistent pairing threads with Codex, Grok, or
+// Claude. The current session drives; the named harness navigates.
+// State lives in ~/.claude/pair/pairs.json (override with
+// PAIR_STATE_FILE; CODEX_PAIR_STATE_FILE still works).
 //
-// Wraps `codex exec` / `codex exec resume` and pins one Codex
-// thread per pair label so a Claude Code session can hold a
-// long-lived conversation with the same Codex partner. State
-// lives in ~/.claude/codex-pair/pairs.json (override with
-// CODEX_PAIR_STATE_FILE).
-//
-//   start [--label L] [--cwd D] [--model M] [--sandbox S]
+//   start [--harness H] [--label L] [--cwd D] [--model M]
 //         prompt on stdin; creates the pair thread
 //   send  [--label L]           prompt on stdin; continues it
 //   list                        print state
-//   end   [--label L]           forget the pair (thread remains
-//                               on disk; `codex resume <id>` works)
+//   end   [--label L]           forget the pair
 
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -58,12 +54,24 @@ import {
   checkReviewSendPreconditions,
   assembleSnapshot,
   snapshotIdFor,
-  gitCQuote
+  gitCQuote,
+  resolveStateFile,
+  isDesignArtifactPath,
+  designArtifactPath
 } from "./lib.mjs";
 
-const STATE_FILE =
-  process.env.CODEX_PAIR_STATE_FILE ??
-  path.join(homedir(), ".claude", "codex-pair", "pairs.json");
+const STATE_FILE = resolveStateFile(
+  process.env,
+  homedir(),
+  (p) => {
+    try {
+      statSync(p);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+);
 
 // Only a missing file means empty state. A corrupt or misshapen
 // file is an error: silently treating it as empty would let the
@@ -111,7 +119,9 @@ function loadState() {
 
 const LOCK_DIR = STATE_FILE + ".lock";
 const LOCK_TIMEOUT_MS = Number(
-  process.env.CODEX_PAIR_LOCK_TIMEOUT_MS ?? 10_000
+  process.env.PAIR_LOCK_TIMEOUT_MS ??
+    process.env.CODEX_PAIR_LOCK_TIMEOUT_MS ??
+    10_000
 );
 const LOCK_STALE_MS = 60_000;
 
@@ -137,7 +147,7 @@ async function acquireLock() {
       if (Date.now() > deadline) {
         throw new Error(
           `timed out waiting for ${LOCK_DIR}; remove it if no other ` +
-            "codex-pair command is running"
+            "pair command is running"
         );
       }
       await sleep(25);
@@ -370,7 +380,7 @@ function takeSnapshot(pair) {
   // diff size, deletions included, with no buffer bound in play.
   // Scoped to this snapshot; removed in the finally below so error
   // paths cannot retain large spool files.
-  const spoolTmpDir = mkdtempSync(path.join(tmpdir(), "codex-pair-snap-"));
+  const spoolTmpDir = mkdtempSync(path.join(tmpdir(), "pair-snap-"));
   let spoolSeq = 0;
   const spoolDiff = (gitArgs, raw, okCodes) => {
     const tmp = path.join(spoolTmpDir, `spool-${spoolSeq++}`);
@@ -494,7 +504,7 @@ async function main() {
   // codex process past token release. Fail fast instead.
   if (process.platform === "win32") {
     throw new Error(
-      "codex-pair supports macOS and Linux only (POSIX process-group " +
+      "pair supports macOS and Linux only (POSIX process-group " +
         "termination)"
     );
   }
@@ -571,8 +581,8 @@ async function main() {
 
   if (opts.command === "design-register") {
     if (!opts.path) throw new Error("design-register requires --path");
-    const expected = `.codex-pair/design-${opts.label}.md`;
-    if (opts.path !== expected) {
+    const expected = designArtifactPath(opts.label);
+    if (!isDesignArtifactPath(opts.label, opts.path)) {
       throw new Error(
         `design artifact must live at ${expected} (got ${opts.path})`
       );
@@ -888,6 +898,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  process.stderr.write(`codex-pair: ${err.message}\n`);
+  process.stderr.write(`pair: ${err.message}\n`);
   process.exit(1);
 });
