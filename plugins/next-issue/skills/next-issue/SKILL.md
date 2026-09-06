@@ -2,7 +2,7 @@
 name: next-issue
 description: >
   Land one GitHub child issue as one pull request: choose the next child
-  issue, write a plan, review the plan (three axes, or Sol only for a
+  issue, write a plan, review the plan (three axes, or Astra only for a
   non-behavior exception), implement with red-green TDD, open a draft pull
   request, and drain review comments until CI is green and no threads
   remain. Use when starting a slice, landing the next child issue, planning
@@ -143,16 +143,16 @@ Do not implement until this step ends in consensus.
 
 ### Review tier
 
-- Behavior change or spec change: three axes (Grok, Sol, Opus 5), or the
+- Behavior change or spec change: three axes (Grok, Astra, Opus 5), or the
   replacements in **Review axes**.
 - Non-behavior exception (docs, comments, formatting, pins, or TODO or
-  CHANGELOG updates with no code change): Sol only. Sol answers: does the
+  CHANGELOG updates with no code change): Astra only. Astra answers: does the
   plan violate the rules, and is this really a non-behavior exception? If
-  Sol says the change is behavior or spec, stop. Promote to three axes
+  Astra says the change is behavior or spec, stop. Promote to three axes
   before implementation.
 - Skip this step only when the user explicitly says to skip plan review.
 
-When Sol runs alone, the parent writes a short brief: child issue, in/out
+When Astra runs alone, the parent writes a short brief: child issue, in/out
 of scope, and why the exception applies. Grok and Opus do not run.
 
 ### Default models
@@ -161,16 +161,23 @@ In Cursor, use the Task tool with these models and no substitute, unless
 **Review axes** names replacements:
 
 - Grok 4.6: `cursor-grok-4.6-high-fast`
-- GPT-5.6-Sol: `gpt-5.6-sol-high`
+- GPT-6-Astra: `gpt-6-astra-high`
 - Opus 5: `claude-opus-5-thinking-high`
 
 Stay at three reviewers. Do not add a fourth model. If a Cursor Task slug
 is missing from the allowlist, report it and continue with the two that
 remain. Do not invent a substitute.
 
+The Astra axis has one fallback: GPT-5.6-Sol (`gpt-5.6-sol-high` in
+Cursor, `-m gpt-5.6-sol` on the Codex CLI). Use it only when Astra
+usage is exhausted or Astra returns a quota or availability error. Say
+in the review record that Sol ran instead of Astra. No other axis has
+a fallback.
+
 On Claude Code or Codex, keep the same three axes and the same reply cap.
 Use that client's native reviewer selection. Do not require Cursor Task
-slugs.
+slugs. On the Codex CLI, Astra is the default model (`gpt-6-astra`), so
+leave the model unset unless the fallback applies.
 
 If a requested model is not available, do not pick a replacement. Report
 the missing model. Continue only when at least two reviews return.
@@ -181,7 +188,7 @@ APPROVE or REQUEST CHANGES. No file-by-file essay.
 
 ### Brief, then split axes
 
-Do not send Sol or Opus the full **Rules** files or named source files as
+Do not send Astra or Opus the full **Rules** files or named source files as
 separate attachments. A complete file that appears in the reviewed diff
 is allowed.
 
@@ -189,11 +196,11 @@ is allowed.
    brief: child issue, in/out of scope, the test contract, and the 3–5
    files that would change. Grok also answers: one slice? process? the
    constraints in **Rules**? The parent writes that brief when Grok does
-   not run. Sol and Opus still receive the brief.
-2. Sol gets the brief, the plan, and only the **Rules** lines that apply
+   not run. Astra and Opus still receive the brief.
+2. Astra gets the brief, the plan, and only the **Rules** lines that apply
    to this slice. Include every applicable section: TDD versus the
    non-behavior exception, spec-first, and also dependency or workflow
-   rules when the plan touches those. Sol answers: does the plan violate
+   rules when the plan touches those. Astra answers: does the plan violate
    those rules, and does it agree with the attached spec excerpt?
 3. Opus gets the brief and the plan Tests section. Opus answers: is the
    planned test contract enough? Do not require a test file or a RED run
@@ -294,7 +301,7 @@ For a three-axis patch review:
 
 - Grok: does the diff match the plan and stay inside the **Rules**
   constraints?
-- Sol: the applicable **Rules** excerpts on the diff, and does the diff
+- Astra: the applicable **Rules** excerpts on the diff, and does the diff
   agree with the attached spec excerpt?
 - Opus: for a behavior change, the real test text and the captured
   failing command output from the RED run (session evidence). Are the
@@ -302,7 +309,7 @@ For a three-axis patch review:
   For a non-behavior exception, verify the recorded exception. Do not
   require fabricated RED evidence.
 
-For Sol-only patch review, Sol verifies the recorded exception and that
+For Astra-only patch review, Astra verifies the recorded exception and that
 the diff matches the plan.
 
 If a reviewer returns REQUEST CHANGES, fix the blocking issue or record
@@ -378,7 +385,7 @@ all-clear. Do not merge or enqueue unless the user explicitly asks.
   model is unavailable.
 - Do not require Cursor Task slugs on Claude Code or Codex.
 - Do not require a test file or a RED run at plan review.
-- Do not send Sol or Opus the full tree, full **Rules** files, or "read
+- Do not send Astra or Opus the full tree, full **Rules** files, or "read
   this 9k-line file." Brief + real plan/diff + the rule excerpt that
   applies. Complete files inside that diff are allowed.
 - Do not send Grok a truncated plan at patch review.

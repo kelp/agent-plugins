@@ -26,7 +26,7 @@ accepted.
 5. **CI** — required checks the parent waits on. The
    pull request base is `main`.
 6. **Review axes** — leave unset to use the plugin
-   defaults (Grok, Sol, Opus 5). Name replacements here
+   defaults (Grok, Astra, Opus 5). Name replacements here
    when they differ.
 7. **Rules** — which files hold TDD, style, and
    dependency rules (usually this file and

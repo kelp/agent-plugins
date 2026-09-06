@@ -21,8 +21,8 @@ skip the plan review. Do not skip the comment drain. Do
 not start a second slice in the same change.
 
 Plan and patch review use a brief plus split axes (Grok,
-Sol, Opus 5 by default). A non-behavior exception uses
-Sol only. The parent watches CI. Reviewers do not poll.
+Astra, Opus 5 by default). A non-behavior exception uses
+Astra only. The parent watches CI. Reviewers do not poll.
 
 ## Install
 

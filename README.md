@@ -278,9 +278,9 @@ open sub-issue of one parent issue.
 - `/next-issue-init` -- inject the binding template into
   CLAUDE.md
 
-Plan and patch review use three axes (Grok, Sol, Opus
+Plan and patch review use three axes (Grok, Astra, Opus
 5) unless the binding names replacements. A
-non-behavior exception uses Sol only.
+non-behavior exception uses Astra only.
 
 ## Composition
 
