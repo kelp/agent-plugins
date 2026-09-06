@@ -47,8 +47,8 @@ a file-disjointness check, concurrency caps, the
 heartbeat and its death signals, and restart from the
 ledger rather than from the dead session's context.
 
-A project supplies six binding values (ledger, unit
-definition, worktree root, caps, gates, pipelines) in its
+A project supplies seven binding values (ledger, unit
+definition, worktree root, caps, gates, pipelines, claims) in its
 own `CLAUDE.md`; the skill lists them.
 
 ## Installation

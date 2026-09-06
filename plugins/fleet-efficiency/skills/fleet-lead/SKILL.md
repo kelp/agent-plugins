@@ -80,10 +80,18 @@ Do these in order. Step 3 is the one nothing else enforces.
    unit size, so the next unit mostly waits.
 6. Stop at three in-flight pull requests. CI is one queue, and
    every extra open branch buys a rebase.
-7. Give the unit its own worktree, a sibling of the main
-   checkout: `git worktree add <wt_root>/<repo>-wt-<unit> -b
-   <branch>`. The main checkout stays read-only for every unit.
-8. Write the row: unit, lead, agent name, worktree, phase, UTC
+7. Take the lock. When the project binding names a **Claims**
+   command, run it with the unit's issue number. It takes a lock
+   that other hosts and other agents see, records the claim on
+   the issue, and prints the worktree. Exit 3 means another
+   agent holds it: skip that unit. The ledger is this host's
+   in-flight view, not the lock. Without a **Claims** command,
+   the ledger row is the only lock, and it binds one host.
+8. Give the unit its worktree: the path the claim printed, or,
+   without a **Claims** command, a sibling of the main checkout:
+   `git worktree add <wt_root>/<repo>-wt-<unit> -b <branch>`.
+   The main checkout stays read-only for every unit.
+9. Write the row: unit, lead, agent name, worktree, phase, UTC
    heartbeat.
 
 Phases are `plan`, `red`, `green`, `review`, `pr`, `drain`.
@@ -97,6 +105,11 @@ Each tick, the drive lead writes the UTC minute into every row it
 owns, and the gate lead sends one SendMessage ping to
 `lead-drive`. A tick that finds nothing changed is a quiet tick;
 say so and stop there.
+
+When the project's claim has a lease, the heartbeat renews it.
+On a tick, when a unit's last push or renewal is older than half
+the lease, the drive lead renews as the project's protocol says.
+A unit that pushed needs no renewal.
 
 A unit is presumed dead when any of these holds:
 
@@ -122,25 +135,36 @@ session's context.
    stop and ask the human to refresh the agent session; where
    signing is provisioned by the environment, a failure is a real
    bug to surface.
-5. Record the restart and its reason in the row.
+5. Record the restart and its reason in the row. The claim
+   stays: a restart is the fleet's own unit under the same name.
+   Breaking a stale claim is for another agent's abandoned work,
+   and follows the project's protocol, never this section.
 
 Two restarts on the same unit means stop and ask the user. A unit
-that dies twice is a broken unit, not an unlucky one.
+that dies twice is a broken unit, not an unlucky one. On abandon,
+release the claim as the project's protocol says, and drop the
+row. When a unit lands, run the project's cleanup and drop the
+row.
 
 ## Project binding
 
-The procedure above is generic. A project supplies six values,
+The procedure above is generic. A project supplies seven values,
 in its own `CLAUDE.md` or process doc:
 
 1. **Ledger** — the file and table holding in-flight rows.
 2. **Unit** — what one unit is, and where the backlog lives.
-3. **Worktree root** — where unit worktrees are created.
+3. **Worktree root** — where unit worktrees are created. None
+   when **Claims** prints the path.
 4. **Caps** — concurrent units and in-flight PRs, when they
    differ from four and three.
 5. **Gates** — the commands a unit must pass before a commit,
    and the CI checks the gate lead waits on.
 6. **Pipelines** — what each phase dispatches to, for example
    the `tdd-pipeline` plugin or a project workflow.
+7. **Claims** — optional. A command that takes one issue number,
+   takes a lock other hosts see, and prints the worktree. The
+   same value as item 8 of the `next-issue` binding. Its
+   protocol owns lease, renewal, break, release, and cleanup.
 
 Read those before claiming anything. Where this skill conflicts
 with the project's own process docs, follow the project.
@@ -148,6 +172,8 @@ with the project's own process docs, follow the project.
 ## What not to do
 
 - Do not let both leads write the ledger.
+- Do not treat the ledger as the lock when the project has a
+  **Claims** command. Another host cannot read your ledger.
 - Do not run two units that touch shared code, or one
   shared-code unit beside anything else.
 - Do not exceed the unit cap or three in-flight PRs.
