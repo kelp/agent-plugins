@@ -257,7 +257,7 @@ Land one GitHub child issue as one pull request. The
 plugin is the operating procedure: choose the next child
 issue, write a plan, review it to consensus, implement with red-green
 TDD, open a draft pull request, and drain review
-comments until CI is green. A project supplies seven
+comments until CI is green. A project supplies eight
 binding values in its own CLAUDE.md.
 
 ```bash

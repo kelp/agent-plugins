@@ -12,7 +12,7 @@ install `next-issue@agent-plugins`. An existing
 
 ## What it does
 
-The procedure is generic. A project supplies seven
+The procedure is generic. A project supplies eight
 binding values in its own `CLAUDE.md`. The skill stops
 if that section is missing.
 

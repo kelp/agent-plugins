@@ -31,3 +31,7 @@ accepted.
 7. **Rules** — which files hold TDD, style, and
    dependency rules (usually this file and
    `CONTRIBUTING.md`).
+8. **Claims** — optional. A command that takes one
+   issue number, takes a lock on it, and prints the
+   directory to work in. Exit 3 means held. Leave
+   unset for one agent per checkout.
