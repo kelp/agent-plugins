@@ -36,14 +36,14 @@ Parent: $ARGUMENTS
 
 ## Binding
 
-Same seven values as `/next-issue`. Read `## Next issue
+Same eight values as `/next-issue`. Read `## Next issue
 binding` in the project's CLAUDE.md. If that heading is
 missing, read `## Next TODO binding`. If both are
 missing, stop and tell the user to run
 `/next-issue-init`.
 
-This skill uses **Backlog**, **Plan**, **CI**, and
-**Rules**. Plan, TDD, and patch review stay in
+This skill uses **Backlog**, **Plan**, **CI**, **Rules**,
+and **Claims**. Plan, TDD, and patch review stay in
 `/next-issue`.
 
 ## Overlay (every next-issue run)
@@ -91,7 +91,12 @@ from `origin/main`" steps for this session only:
    - **Named** — match a unique substring or issue
      number. If zero names match or several match, stop
      and report. Do not guess.
-3. Open that parent. Stop if it carries `blocked`.
+3. Open that parent. Stop if it carries `blocked`. When
+   **Claims** names a command, run it with the parent
+   issue number before anything else. Exit 3 means
+   another agent holds the parent: stop and report the
+   holder. Each sub-issue still gets its own claim
+   inside `/next-issue`.
 4. List every remaining open sub-issue of that parent,
    in Children order. Keep a `blocked` sub-issue in the
    list; §2 evaluates it in turn and stops there. Do not

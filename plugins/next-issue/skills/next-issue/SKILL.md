@@ -46,6 +46,9 @@ Every value marked *(binding)* below comes from that section:
 5. **CI** — required checks the parent waits on.
 6. **Review axes** — replacements for the defaults below, if any.
 7. **Rules** — TDD, style, and dependency files.
+8. **Claims** — optional. A command that takes one issue number, takes
+   a lock on that issue, and prints the directory to work in. Unset
+   means no lock: branch from `main` in the current checkout.
 
 ## When to use
 
@@ -102,11 +105,23 @@ report. Do not skip to another child.
   not closed, or whose change is not on `origin/main`. An open pull
   request is not a landing. A Merged badge is not a landing.
 
-### Branch
+### Claim and branch
+
+When **Claims** *(binding)* names a command, run it with the child issue
+number before the plan. It takes the lock, records the claim on the
+issue, sets `in-progress`, and prints the directory to work in. Work
+there and nowhere else. Do not edit the checkout you ran it from. Exit
+3 means another agent holds the child: for a default child, take the
+next qualifying child; for a named child, stop and report the holder.
+Do not plan, edit, or run **Gates** on an issue you do not hold.
+
+When **Claims** is unset:
 
 1. Fetch `origin/main` when the local default branch may be stale.
 2. Confirm the local `main` matches `origin/main` before you branch.
-3. Record the child issue number and title. That is the slice name.
+
+Either way, record the child issue number and title. That is the slice
+name.
 
 Do not combine child issues. Do not pull in the next child "while you are
 here."
@@ -279,8 +294,9 @@ When you open the pull request:
 
 1. Put `Closes #<child>` in the pull request body, so the child issue
    closes on merge.
-2. Move the child issue from `ready` to `in-progress`: remove the `ready`
-   label and add `in-progress`.
+2. When **Claims** is unset, move the child issue from `ready` to
+   `in-progress`: remove the `ready` label and add `in-progress`. A
+   claim already did this.
 
 Do not merge. Do not enable auto-merge. Do not enqueue on the merge queue.
 Do not mark the PR ready unless the user asks.
@@ -394,6 +410,8 @@ all-clear. Do not merge or enqueue unless the user explicitly asks.
 - Do not re-run all three models on a wording nit. Resume the objector
   with the delta. Re-run any axis whose input changed.
 - Do not resume patch review on an uncommitted fix, even a docs-only fix.
+- Do not plan, edit, or run **Gates** on a child the claim did not grant,
+  and do not edit the checkout the claim command ran from.
   Run **Gates**, commit, and push first.
 - Do not ask reviewers to watch CI. The parent may poll when
   subscriptions are unavailable.
