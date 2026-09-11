@@ -11,8 +11,8 @@ Claude Code plugins by kelp:
 - **pair** -- pairs with Codex, Grok, or Claude
 - **knowledge-forge** -- captures notes and routes
   retrieval for a personal knowledge base
-- **fleet-efficiency** -- runs agent fleets: token rules
-  for fan-out, and a two-lead operating procedure
+- **fleet-efficiency** -- subagent delegation rules, token
+  rules for fan-out, and a two-lead operating procedure
 - **next-issue** -- lands one GitHub sub-issue as one
   PR, or one parent issue's remaining sub-issues as a
   stack
@@ -224,9 +224,11 @@ bucket conventions if you adopt it.
 
 Two skills for running agent fleets.
 
-`fleet-efficiency` loads before large parallel agent
-dispatches, Workflow scripts, audits, and migrations:
-scout once and brief many, keep fleet prompts
+`fleet-efficiency` loads before any Agent call: pick the
+most specific agent type, brief like a colleague, run
+independent agents in parallel, verify the result. For
+fleets (3+ agents, Workflow scripts, audits, migrations)
+it adds: scout once and brief many, keep fleet prompts
 byte-identical for the prompt cache, hand structured
 artifacts between pipeline stages, and name a model tier
 on every dispatch.
