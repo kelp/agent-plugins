@@ -27,9 +27,10 @@ byte-stable (no timestamps or run ids) so Workflow resume
 and cross-agent prompt caching hold.
 
 **Model tiers** -- every agent dispatch names its model
-explicitly; sonnet for mechanical work, opus for ordinary
-implementation and review, fable budgeted for the hardest
-judgment calls.
+explicitly; haiku for mechanical work, sonnet for specified
+plans, opus for ordinary implementation and review, fable
+budgeted as orchestrator and for the hardest judgment calls.
+Lower effort comes before a lower tier.
 
 ### fleet-lead
 

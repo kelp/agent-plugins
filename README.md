@@ -247,8 +247,8 @@ everything in flight; shared-code units run alone.
 ```
 
 No commands, hooks, or agents; both skills are
-model-invoked. The model-tier names (sonnet, opus,
-fable) assume Anthropic's current lineup; adjust the
+model-invoked. The model-tier names (haiku, sonnet,
+opus, fable) assume Anthropic's current lineup; adjust the
 skill text if yours differs. `fleet-lead` expects the
 project to define its ledger, unit definition, worktree
 root, caps, gates, and pipelines.
