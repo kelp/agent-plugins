@@ -20,7 +20,8 @@ description: How to brief, dispatch, and right-size subagents, plus the context-
 - Brief the agent like a colleague who just walked in: goal,
   context, what has been ruled out, expected output shape, and
   a length cap if you want one.
-- Verify what the agent did; never trust the summary blind.
+- Spot-check the claims you will act on. Do not redo the agent's
+  work or re-derive its findings; if you delegate, commit to it.
 - Forks (`subagent_type: "fork"`) always run on the parent
   model; `model` overrides are ignored.
 
@@ -59,28 +60,44 @@ thread. Rules:
   other volatile values inside prompts; they bust Workflow
   resume caching and cross-agent prompt caching. Pass volatile
   values via `args` and reference them once.
-- **Don't optimize away independence.** Verifiers re-reading the
-  code their finder cited is intentional redundancy; cut the
-  briefing waste, not the adversarial checks.
+- **Don't optimize away independence in audits.** In a
+  finder-then-verifier pipeline, verifiers re-reading the code
+  their finder cited is intentional redundancy; cut the briefing
+  waste, not the adversarial checks. This applies to audits and
+  sweeps only. Checking your own work stays in the main loop.
 
 ## Model tiers (pass `model` explicitly on EVERY dispatch)
 
-An unpinned agent inherits the session model — often the most
-expensive tier. Every `Agent` call and every Workflow `agent()`
-call names its model; every mechanical stage also sets
+An unpinned agent inherits the session model, which is often the
+most expensive tier. Every `Agent` call and every Workflow
+`agent()` call names its model; every mechanical stage also sets
 `effort: 'low'`.
 
-- **sonnet** (default workhorse): search, extraction, summarizing,
-  gate-runners (run a command, report counts), formatters,
-  dedupers, executing a fully specified plan.
+- **haiku** (mechanical): file search, grep-and-report,
+  extraction into a schema, gate-runners (run a command, report
+  counts), formatters, dedupers. Haiku 5.5 costs about 1/20 of
+  Sonnet.
+- **sonnet** (workhorse): summarizing, executing a fully
+  specified plan, test writing from a detailed spec, work that
+  needs some judgment but no design.
 - **opus** (mid): implementation with real design decisions,
-  ordinary debugging, standard code review, test writing from a
-  detailed spec, refuter/verifier passes.
-- **fable** (top, budget it): hardest design questions, subtle
-  bug hunting, adversarial review of tricky code, cross-file
-  refactor planning. A fleet of fable finders is almost always
-  overkill — one fable judge over opus finders beats N fable
-  finders.
+  ordinary debugging, standard code review, refuter/verifier
+  passes. Opus 5.5 costs about 2x Sonnet.
+- **fable** (top, budget it): orchestrator and judge for cheaper
+  models, hardest design questions, subtle bug hunting,
+  adversarial review of tricky code, cross-file refactor
+  planning. Fable 5.2 costs about 2x Opus. A fleet of fable
+  finders is almost always overkill; one fable judge over opus
+  finders beats N fable finders.
+
+Try lower effort before a lower tier. A stronger model at `low`
+or `medium` effort often matches a weaker model at `high`, and
+costs less per finished task when it needs fewer retries. Effort
+defaults differ by model (Opus 5.5 defaults to `medium`), so set
+`effort` explicitly on any stage where depth matters.
+
+Prompt caches are per model. Run every agent in one stage on the
+same model, or the shared-preamble rule above buys nothing.
 
 When unsure, start cheap and escalate. Escalate-if-thin catches
 thin results, not confidently wrong ones: for judgment-heavy work
@@ -88,5 +105,5 @@ thin results, not confidently wrong ones: for judgment-heavy work
 will act on in the main thread first.
 
 Right-size the harness before the models: a majority-vote refuter
-panel is for audits and high-stakes sweeps, not for hardening a
-small PR — there, one finder plus one verifier is the ceiling.
+panel is for audits and high-stakes sweeps. A small PR gets no
+verifier subagent; review it in the main loop.
